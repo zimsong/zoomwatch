@@ -29,11 +29,31 @@ from urllib.parse import urljoin
 DEFAULT_BASE = "https://zoommytrip.kr/data/"
 CABIN_COLS = ("business", "first", "upgrade")  # 편도 파일의 좌석 컬럼들
 
+# 서버(GitHub Actions)에서 요청해도 차단되지 않도록 실제 브라우저처럼 보이는 헤더.
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+
 
 def _get_json(url, timeout=30):
-    req = urllib.request.Request(url, headers={"User-Agent": "zoomwatch/1.0"})
+    req = urllib.request.Request(url, headers={
+        "User-Agent": BROWSER_UA,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
+        "Referer": "https://zoommytrip.kr/",
+    })
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
+        status = getattr(r, "status", None)
+        ctype = r.headers.get("Content-Type", "")
+        raw = r.read()
+    try:
+        return json.loads(raw)
+    except Exception as e:
+        # 실패 시 무엇이 돌아왔는지 진단용으로 남긴다(원인 파악).
+        snippet = raw[:300].decode("utf-8", "replace") if raw else "(빈 응답)"
+        raise RuntimeError(
+            f"JSON 파싱 실패 @ {url} status={status} content-type={ctype!r} "
+            f"len={len(raw)} body[:300]={snippet!r}"
+        ) from e
 
 
 def _read_local(path):

@@ -378,7 +378,7 @@ function afterTripChange(){ refreshTgt(); renderOverview(); renderTargetCal(); r
 // ① 연간 캘린더
 function monthRange(){ const now=new Date(); let y=now.getFullYear(),m=now.getMonth()+1,out=[]; for(let i=0;i<13;i++){out.push(y+"-"+String(m).padStart(2,"0"));m++;if(m>12){m=1;y++;}} return out; }
 function renderYear(city,dir){
-  const seatSet=seatDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  const seatSet=seatDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
   const draftDate=dir==="O"?state.draft.out:state.draft.in;
   let html="",total=0;
   for(const ym of monthRange()){
@@ -404,7 +404,7 @@ function renderYear(city,dir){
 // ①-전체개요: 도시별 가는편/오는편 캘린더(13개월 전체)
 function seatCount(city,dir){ const today=todayStr(),hz=horizonStr(); let n=0; seatsOf(city).forEach(([d,dr])=>{ if(dr===dir&&d>=today&&d<=hz)n++; }); return n; }
 function renderYearMonths(city,dir,months){
-  const seatSet=seatDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  const seatSet=seatDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
   let html="";
   for(const ym of months){
     const [y,m]=ym.split("-").map(Number);

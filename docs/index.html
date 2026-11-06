@@ -82,6 +82,7 @@
   .mc.tgt{font-weight:800}
   .mc.tgt::after{content:"";position:absolute;top:1px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--tgtdot);box-shadow:0 0 0 1px var(--surface)}
   .mc.seat.tgt::after{box-shadow:0 0 0 1px rgba(255,255,255,.8)}
+  .mc.tgt-end::after{width:7px;height:7px;top:0}
   .mc.draft{outline:2px solid var(--accent);outline-offset:-2px;font-weight:800}
   .hint{font-size:12px;color:var(--muted);margin:14px 0 4px}
 
@@ -138,7 +139,9 @@
   .savebox{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
   .savehd{font-size:12.5px;color:var(--muted);margin-bottom:8px;line-height:1.5}
   #saveJson{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);padding:10px;resize:vertical}
-  .saverow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+  .saverow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px}
+  .savetitle{font-size:14px;font-weight:800;margin-bottom:6px}
+  .savesub{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 8px;border-radius:20px;margin-left:6px}
 </style>
 
 <header>
@@ -231,13 +234,15 @@
       <h2>내 여행 <span class="tgtcount" id="tgtCount">0</span></h2>
       <div id="tgtList"></div>
       <div class="savebox" id="saveBox" hidden>
-        <div class="savehd">이 여행들을 <b>모든 기기에서 동일하게</b> 보고 나중에 알림까지 받으려면 GitHub에 저장하세요. 아래 코드를 복사해 <code>docs/trips.json</code>에 붙여넣고 커밋하면 됩니다.</div>
-        <textarea id="saveJson" readonly rows="5"></textarea>
+        <div class="savetitle">💾 GitHub에 저장 <span class="savesub">모든 기기 동기화 · 알림 연결용</span></div>
+        <div class="savehd">여행을 추가/수정하면 이 기기에만 임시 저장됩니다. 아래 순서로 반영하면 모든 기기에서 똑같이 보입니다: ① 코드 복사 → ② GitHub 편집 열기 → ③ 전체 지우고 붙여넣기 → ④ 커밋.</div>
         <div class="saverow">
-          <button class="addbtn" id="copyJson">저장용 코드 복사</button>
-          <a class="linkbtn" id="ghEdit" target="_blank" rel="noopener">GitHub에서 trips.json 편집 열기 ↗</a>
-          <button class="ghostbtn" id="revertTrips" hidden>저장소 버전으로 되돌리기</button>
+          <button class="addbtn" id="copyJson">① 저장용 코드 복사</button>
+          <a class="linkbtn" id="ghEdit" target="_blank" rel="noopener">② GitHub에서 편집 열기 ↗</a>
+          <button class="ghostbtn" id="toggleJson">코드 보기</button>
+          <button class="ghostbtn" id="revertTrips" hidden>되돌리기</button>
         </div>
+        <textarea id="saveJson" readonly rows="5" hidden></textarea>
         <div class="addmsg" id="saveMsg"></div>
       </div>
     </div>
@@ -263,7 +268,8 @@ const $=s=>document.querySelector(s);
 let DB=null;
 const REPO="zimsong/zoomwatch";
 let state={ tab:"seats", calCont:"all", tCity:"밴쿠버", trips:[], committed:[], draft:{out:null,in:null} };
-let TGT=new Set();
+let TGT=new Set();      // 정확한 끝점: "city|dir|date"
+let TGTRANGE={};        // 여행 기간 전체: city -> Set(date)
 function uid(){ return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function withIds(arr){ return (Array.isArray(arr)?arr:[]).map(t=>({id:t.id||uid(), city:t.city, out:t.out||null, in:t.in||null})); }
 function norm(arr){ return JSON.stringify((Array.isArray(arr)?arr:[]).map(t=>({city:t.city, out:t.out||null, in:t.in||null}))); }
@@ -271,7 +277,17 @@ function loadDraftTrips(){ try{ return JSON.parse(localStorage.getItem("zw_trips
 function saveDraftTrips(){ try{ localStorage.setItem("zw_trips",JSON.stringify(state.trips)); }catch(e){} }
 function clearDraftTrips(){ try{ localStorage.removeItem("zw_trips"); }catch(e){} }
 function tripsDirty(){ return norm(state.trips)!==norm(state.committed); }
-function refreshTgt(){ TGT=new Set(); state.trips.forEach(t=>{ if(t.out)TGT.add(t.city+"|O|"+t.out); if(t.in)TGT.add(t.city+"|I|"+t.in); }); }
+function eachDate(a,b,cb){ let s=a,e=b; if(s>e){const t=s;s=e;e=t;} let d=new Date(s+"T00:00:00Z"); const end=new Date(e+"T00:00:00Z"); while(d<=end){ cb(d.toISOString().slice(0,10)); d.setUTCDate(d.getUTCDate()+1); } }
+function refreshTgt(){
+  TGT=new Set(); TGTRANGE={};
+  state.trips.forEach(t=>{
+    if(t.out)TGT.add(t.city+"|O|"+t.out); if(t.in)TGT.add(t.city+"|I|"+t.in);
+    const set=TGTRANGE[t.city]||(TGTRANGE[t.city]=new Set());
+    if(t.out&&t.in) eachDate(t.out,t.in,d=>set.add(d));
+    else if(t.out) set.add(t.out);
+    else if(t.in) set.add(t.in);
+  });
+}
 
 fetch("data.json").then(r=>r.json()).then(d=>{
   DB=d;
@@ -315,6 +331,7 @@ function boot(){
   $("#tripAdd").onclick=addTrip;
   $("#draftClear").onclick=()=>{ state.draft={out:null,in:null}; renderTargetCal(); $("#tripMsg").textContent=""; };
   $("#copyJson").onclick=copySaveJson;
+  $("#toggleJson").onclick=()=>{ const t=$("#saveJson"); t.hidden=!t.hidden; $("#toggleJson").textContent=t.hidden?"코드 보기":"코드 숨기기"; };
   $("#revertTrips").onclick=()=>{ state.trips=state.committed.slice(); clearDraftTrips(); state.draft={out:null,in:null}; afterTripChange(); };
 
   setTab(location.hash==="#target"?"target":"seats");
@@ -328,7 +345,8 @@ function setTab(t){
 }
 
 // 타겟/여행 공통
-function isTarget(city,dir,date){ return TGT.has(city+"|"+dir+"|"+date); }
+function isTarget(city,dir,date){ return !!(TGTRANGE[city]&&TGTRANGE[city].has(date)); }  // 여행 기간 내(점)
+function isEndpoint(city,dir,date){ return TGT.has(city+"|"+dir+"|"+date); }  // 그 방향의 출발/도착 끝점(큰 점)
 function pickDraft(dir,date){
   const d=state.draft;
   // 같은 날짜 다시 누르면 해제(토글)
@@ -367,9 +385,9 @@ function renderYear(city,dir){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
       if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
-      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), past=date<today;
+      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), past=date<today;
       if(hasSeat&&!past) cnt++;
-      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
+      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(tend)cls+=" tgt-end"; if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
       cells+=`<div class="${cls}" data-date="${date}">${day}</div>`;
     }
     total+=cnt;
@@ -392,9 +410,9 @@ function renderYearMonths(city,dir,months){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
       if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
-      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), past=date<today;
+      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), past=date<today;
       if(hasSeat&&!past) cnt++;
-      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(past)cls+=" past";
+      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(tend)cls+=" tgt-end"; if(past)cls+=" past";
       cells+=`<div class="${cls}" data-date="${date}">${day}</div>`;
     }
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
@@ -470,7 +488,7 @@ function renderSaveState(){
 function copySaveJson(){
   const ta=$("#saveJson"), msg=$("#saveMsg");
   const done=()=>{ msg.style.color="var(--ok)"; msg.textContent="✓ 복사됨. 'GitHub에서 trips.json 편집 열기'로 가서 전체를 지우고 붙여넣은 뒤 커밋하세요."; };
-  const fallback=()=>{ try{ ta.removeAttribute("readonly"); ta.select(); document.execCommand("copy"); ta.setAttribute("readonly","");}catch(e){} done(); };
+  const fallback=()=>{ try{ ta.hidden=false; $("#toggleJson").textContent="코드 숨기기"; ta.removeAttribute("readonly"); ta.select(); document.execCommand("copy"); ta.setAttribute("readonly","");}catch(e){} done(); };
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(done,fallback); } else fallback(); }
   catch(e){ fallback(); }
 }

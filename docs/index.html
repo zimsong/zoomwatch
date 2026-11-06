@@ -250,7 +250,7 @@
 
   <p class="foot" id="foot" hidden>
     편도 프레스티지(비즈) 1인 공제 <b>62,500마일</b>(평수기)·성수기 92,500·세금 별도.<br>
-    데이터 출처: zoommytrip.kr 공개 데이터 · 개인/가족용 · 예시 스냅샷(전 도시·매일 갱신은 운영 연결 시).<br>
+    개인/가족용 · 매일 자동 갱신.<br>
     실제 예약은 대한항공 홈페이지에서 직접. 좌석은 수시로 바뀝니다.
   </p>
 </main>
@@ -314,7 +314,7 @@ function fmtUpd(iso){ const d=new Date(iso),p=n=>String(n).padStart(2,"0"); retu
 function boot(){
   $("#loading").hidden=true; $("#foot").hidden=false;
   $("#mainnav").innerHTML=MENUS.map(m=>`<a class="navitem${m.active?' active':''}"${m.href?` href="${m.href}"`:''}>${m.label}</a>`).join("");
-  $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b> <span class=\"src\">· 출처 <a href=\""+DATA_SOURCE.url+"\" target=\"_blank\" rel=\"noopener\">"+DATA_SOURCE.name+"</a></span>";
+  $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b>";
   document.querySelectorAll(".openinfo").forEach(el=>el.innerHTML=`현재 예약 가능한 가장 먼 출발일은 <b>${horizonStr()}</b>입니다. 그 이후 날짜는 아직 오픈 전이라 회색으로 표시됩니다.`);
   const opts=cityOptions(); $("#tCity").innerHTML=opts;
   if(!cityList().includes(state.tCity)) state.tCity=cityList()[0];

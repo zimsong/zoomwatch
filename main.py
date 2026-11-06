@@ -17,7 +17,7 @@ import json
 import os
 import sys
 
-from zoomwatch import source, logic, notify, board, history
+from zoomwatch import source, logic, notify, board, history, trips_alert
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WATCHLIST_PATH = os.path.join(ROOT, "config", "watchlist.json")
@@ -25,6 +25,8 @@ STATE_PATH = os.path.join(ROOT, "state", "snapshot.json")
 DOCS_DATA_PATH = os.path.join(ROOT, "docs", "data.json")
 SEEN_BOARD_PATH = os.path.join(ROOT, "state", "seen_board.json")
 HISTORY_EVENTS_PATH = os.path.join(ROOT, "history", "events.jsonl")
+TRIPS_PATH = os.path.join(ROOT, "docs", "trips.json")
+TRIPS_SEEN_PATH = os.path.join(ROOT, "state", "trips_seen.json")
 
 
 def load_watches():
@@ -78,6 +80,27 @@ def main():
             print(f"히스토리: {h}")
         except Exception as e:
             print(f"::warning:: 히스토리 기록 실패: {type(e).__name__}: {e}")
+
+    # 타겟 여행 알림: trips.json의 여행 날짜에 좌석이 새로 뜨면 알림
+    if bd is not None:
+        try:
+            trips = trips_alert.load_trips(TRIPS_PATH)
+            if trips:
+                t_alerts, _ = trips_alert.check(trips, bd, TRIPS_SEEN_PATH)
+                tmsg = trips_alert.format_msg(t_alerts)
+                if tmsg:
+                    print("---- 타겟 여행 알림 ----")
+                    print(tmsg)
+                    try:
+                        notify.notify(tmsg)
+                    except Exception as e:
+                        print(f"::error:: 타겟 알림 발송 실패: {type(e).__name__}: {e}")
+                else:
+                    print(f"타겟 여행 {len(trips)}건 — 새로 뜬 좌석 없음")
+            else:
+                print("타겟 여행 없음(docs/trips.json 비어있음)")
+        except Exception as e:
+            print(f"::warning:: 타겟 알림 처리 실패: {type(e).__name__}: {e}")
 
     prev = load_prev_snapshot()
     first_run = not prev  # 첫 실행이면 전부 '신규'로 쏟아지지 않게 알림은 건너뛰고 기준선만 저장

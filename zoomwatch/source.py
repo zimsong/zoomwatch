@@ -81,17 +81,24 @@ def _browser_session():
 
 
 def _browser_get_json(url, timeout=60000):
+    import time
     _, _, ctx, page = _browser_session()
-    resp = ctx.request.get(url, headers={"Referer": "https://zoommytrip.kr/"}, timeout=timeout)
-    raw = resp.body()
-    try:
-        return json.loads(raw)
-    except Exception:
-        # 쿠키가 아직이면 페이지로 직접 이동해 챌린지를 통과한 뒤 본문을 파싱
-        page.goto(url, wait_until="networkidle", timeout=timeout)
-        el = page.query_selector("pre")
-        txt = el.inner_text() if el else page.evaluate("document.body.innerText")
-        return json.loads(txt)
+    # 데이터 파일은 첫 요청에서 챌린지 HTML이 올 수 있어 몇 번 재시도한다.
+    for _ in range(6):
+        resp = ctx.request.get(url, headers={"Referer": "https://zoommytrip.kr/"}, timeout=timeout)
+        raw = resp.text()
+        s = raw.lstrip()
+        if s[:1] in ("{", "["):
+            try:
+                return json.loads(raw)
+            except Exception:
+                pass
+        time.sleep(0.8)
+    # 마지막 수단: 페이지로 직접 이동해 JS 챌린지를 통과한 뒤 본문을 파싱
+    page.goto(url, wait_until="networkidle", timeout=timeout)
+    el = page.query_selector("pre")
+    txt = el.inner_text() if el else page.evaluate("document.body.innerText")
+    return json.loads(txt)
 
 
 def close_browser():
@@ -205,7 +212,10 @@ def fetch_records(index, file_entry):
     base = index.get("_base", DEFAULT_BASE)
     docs = []
     top = _load(base, file_entry.get("url") or file_entry.get("file"))
-    if top.get("rows"):
+    top_rows = top.get("rows")
+    # 실제 데이터: top의 rows가 '리스트'면 전체 데이터가 top에 들어있는 것(왕복 등).
+    # rows가 '숫자(개수)'이거나 없으면 월별 parts에 실제 데이터가 있다(편도 등).
+    if isinstance(top_rows, list) and top_rows:
         docs.append(top)
     else:
         top_cols = top.get("columns")

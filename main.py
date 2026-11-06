@@ -17,12 +17,14 @@ import json
 import os
 import sys
 
-from zoomwatch import source, logic, notify, board
+from zoomwatch import source, logic, notify, board, history
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WATCHLIST_PATH = os.path.join(ROOT, "config", "watchlist.json")
 STATE_PATH = os.path.join(ROOT, "state", "snapshot.json")
 DOCS_DATA_PATH = os.path.join(ROOT, "docs", "data.json")
+SEEN_BOARD_PATH = os.path.join(ROOT, "state", "seen_board.json")
+HISTORY_EVENTS_PATH = os.path.join(ROOT, "history", "events.jsonl")
 
 
 def load_watches():
@@ -62,11 +64,20 @@ def main():
         return 1
 
     # 보드용 data.json 출력(매 실행, 알림 로직과 무관하게 전체 좌석을 보드로 내보냄)
+    bd = None
     try:
         bd = board.write_board_data(DOCS_DATA_PATH, base=base)
         print(f"보드 데이터 출력: docs/data.json ({len(bd['cities'])}개 도시, updated={bd['updated']})")
     except Exception as e:
         print(f"::warning:: 보드 데이터 출력 실패: {type(e).__name__}: {e}")
+
+    # 변화 로그 누적(미래 예측용): 좌석 appear/disappear 이벤트를 history/events.jsonl에 추가
+    if bd is not None:
+        try:
+            h = history.update_from_board(bd, SEEN_BOARD_PATH, HISTORY_EVENTS_PATH)
+            print(f"히스토리: {h}")
+        except Exception as e:
+            print(f"::warning:: 히스토리 기록 실패: {type(e).__name__}: {e}")
 
     prev = load_prev_snapshot()
     first_run = not prev  # 첫 실행이면 전부 '신규'로 쏟아지지 않게 알림은 건너뛰고 기준선만 저장

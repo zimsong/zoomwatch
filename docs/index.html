@@ -125,6 +125,7 @@
   .draftslot{flex:1;min-width:150px;text-align:left;font:inherit;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:9px 12px;cursor:default;display:flex;flex-direction:column;gap:2px}
   .draftslot.out{border-left:3px solid var(--out)} .draftslot.in{border-left:3px solid var(--in)}
   .draftslot.active{border-style:solid;border-color:var(--accent)}
+  .draftslot.next{border-style:solid;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
   .draftslot .dl{font-size:11px;font-weight:700;color:var(--muted)}
   .draftslot .dv{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
   .draftslot .dv.empty{color:var(--muted);font-weight:600}
@@ -192,7 +193,7 @@
     </div>
 
     <div class="draftcard">
-      <div class="drafthd">새 여행 만들기 — 아래 달력에서 날짜를 누르면 채워집니다</div>
+      <div class="drafthd">새 여행 만들기 — 달력에서 날짜를 누르면 <b>첫 클릭=출국일, 둘째 클릭=입국일</b> 순으로 채워집니다</div>
       <div class="draftrow">
         <div class="draftslot out" id="slotOut"><span class="dl">🛫 출국일 (가는편 ICN→)</span><span class="dv empty" id="draftOut">달력에서 선택</span></div>
         <div class="draftslot in" id="slotIn"><span class="dl">🛬 입국일 (오는편 →ICN)</span><span class="dv empty" id="draftIn">달력에서 선택</span></div>
@@ -329,8 +330,14 @@ function setTab(t){
 // 타겟/여행 공통
 function isTarget(city,dir,date){ return TGT.has(city+"|"+dir+"|"+date); }
 function pickDraft(dir,date){
-  if(dir==="O") state.draft.out=(state.draft.out===date?null:date);
-  else state.draft.in=(state.draft.in===date?null:date);
+  const d=state.draft;
+  // 같은 날짜 다시 누르면 해제(토글)
+  if(d.out===date){ d.out=null; return renderTargetCal(); }
+  if(d.in===date){ d.in=null; return renderTargetCal(); }
+  // 순서대로: 1번째 클릭=출국일, 2번째=입국일, 둘 다 찼으면 새로 시작
+  if(!d.out) d.out=date;
+  else if(!d.in) d.in=date;
+  else { d.out=date; d.in=null; }
   renderTargetCal();
 }
 function addTrip(){
@@ -425,6 +432,9 @@ function renderTargetCal(){
   si.textContent=state.draft.in?fmtDate(state.draft.in):"달력에서 선택"; si.classList.toggle("empty",!state.draft.in);
   $("#slotOut").classList.toggle("active",!!state.draft.out);
   $("#slotIn").classList.toggle("active",!!state.draft.in);
+  const nextLeg = !state.draft.out ? "out" : (!state.draft.in ? "in" : "out");
+  $("#slotOut").classList.toggle("next", nextLeg==="out");
+  $("#slotIn").classList.toggle("next", nextLeg==="in");
   $("#tripAdd").disabled=!(state.draft.out||state.draft.in);
 }
 

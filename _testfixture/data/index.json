@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-11-06T11:14:30+09:00",
+  "files": [
+    {
+      "file": "ke_roundtrip_north_america.json",
+      "url": "ke_roundtrip_north_america.json",
+      "airline": "KE", "type": "roundtrip", "continent": "north_america"
+    },
+    {
+      "file": "ke_oneway_north_america.json",
+      "url": "ke_oneway_north_america.json",
+      "airline": "KE", "type": "oneway", "continent": "north_america",
+      "parts": [
+        { "month": "2026-11", "url": "ke_oneway_north_america_2026-11.json" }
+      ]
+    }
+  ]
+}

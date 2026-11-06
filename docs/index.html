@@ -1,0 +1,347 @@
+<title>마일리지 좌석 보드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* 캘린더 메인. ①가능한 좌석=연간 캘린더(목적지·방향→가능일 표시) ②타겟=특정 날짜 지정 설정페이지. 편도·비즈 전용 */
+  :root{
+    --bg:#f3f5f8; --surface:#ffffff; --line:#e2e7ee; --fg:#182029; --muted:#5c6673;
+    --accent:#1d6fd6; --accent-soft:#e7f0fb; --out:#1d6fd6; --in:#7a4ad6; --in-soft:#efe7fb; --out-soft:#e7f0fb;
+    --ok:#127a4a; --ok-soft:#e2f3ea; --new:#c2410c; --new-soft:#fdeadd; --wknd:#b23b5e; --tgt:#b8860b; --tgt-soft:#faf0d2;
+    --shadow:0 1px 2px rgba(20,30,45,.06),0 2px 8px rgba(20,30,45,.05);
+    --f-body:"Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
+    --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
+    --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--f-body);line-height:1.45;font-size:14px}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
+  .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line)}
+  .head-in{padding-block:11px 0}
+  .titlerow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+  h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .upd{font-size:11.5px;color:var(--muted);font-weight:600}.upd b{color:var(--ok)}
+  .tabs{display:flex;gap:4px;margin-top:10px}
+  .tab{font:inherit;font-size:13.5px;font-weight:700;padding:9px 14px;border:0;border-bottom:2.5px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+  .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+
+  main{padding-block:14px}
+  .frow{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .flabel{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px}
+  select,input[type=date]{font:inherit;font-size:13.5px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);max-width:100%}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);width:max-content;max-width:100%}
+  .seg button{font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+
+  /* 연간 캘린더 */
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:14px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .lg{width:12px;height:12px;border-radius:4px;display:inline-block}
+  .lg.seat{background:var(--ok)} .lg.out{background:var(--out)} .lg.in{background:var(--in)} .lg.tgt{background:var(--surface);box-shadow:0 0 0 2px var(--tgt) inset} .lg.both{background:var(--ok);box-shadow:0 0 0 2px var(--tgt) inset} .lg.beyond{background:var(--line)}
+  .openinfo{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.5}.openinfo b{color:var(--fg)}
+
+  /* 분할 화면: 가는편(위) / 오는편(아래) */
+  .split{display:flex;flex-direction:column;gap:12px}
+  .half{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);padding:14px;min-width:0}
+  .half.out{border-top:3px solid var(--out)}
+  .half.in{border-top:3px solid var(--in)}
+  .halfhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .dirtag{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:6px}
+  .dirtag.out{color:var(--out)} .dirtag.in{color:var(--in)}
+  .halfcnt{font-size:12px;font-weight:700;color:var(--muted)}.halfcnt b{color:var(--ok)}
+  .year{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
+  .mini{min-width:0}
+  .mini .mt{font-size:12.5px;font-weight:800;margin-bottom:5px;display:flex;justify-content:space-between;align-items:baseline}
+  .mini .mt .cnt{font-size:11px;font-weight:700;color:var(--ok)}
+  .mg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .dh{font-size:9px;font-weight:700;color:var(--muted);text-align:center;padding-bottom:1px}
+  .dh.sun{color:var(--wknd)}
+  .mc{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:10.5px;border-radius:5px;position:relative;color:var(--fg);font-variant-numeric:tabular-nums}
+  .mc.blank{visibility:hidden}
+  .mc.day{cursor:pointer}
+  .mc.past{opacity:.28;cursor:default}
+  .mc.beyond{opacity:.32;cursor:default;color:var(--muted)}
+  .mc.sun{color:var(--wknd)}
+  .mc.seat{background:var(--ok);color:#fff;font-weight:800}
+  .mc.seat.out{background:var(--out)} .mc.seat.in{background:var(--in)}
+  .mc.tgt{box-shadow:0 0 0 2px var(--tgt) inset;font-weight:800}
+  .mc.tgt .st{position:absolute;top:-4px;right:-2px;font-size:8px;color:var(--tgt)}
+  .hint{font-size:12px;color:var(--muted);margin:14px 0 4px}
+
+  /* 전 도시 개요 */
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips button{font:inherit;font-size:13px;font-weight:600;padding:6px 13px;border:1px solid var(--line);border-radius:20px;background:var(--surface);color:var(--muted);cursor:pointer}
+  .chips button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .contgroup{margin-bottom:6px}
+  .conth{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+  .conth .ccount{background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:800;padding:1px 8px;border-radius:20px}
+  .citysec{margin-bottom:12px}
+  .cityname{font-size:15px;font-weight:800;margin:0 0 8px}
+  .nocal{font-size:12px;color:var(--muted);padding:6px 2px}
+
+  /* 타겟 설정 */
+  .addcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px;margin-bottom:20px}
+  .addcard h2{font-size:14px;font-weight:800;margin:0 0 12px}
+  .addrow{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .addbtn{font:inherit;font-size:14px;font-weight:800;padding:9px 18px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  .addbtn:disabled{opacity:.4;cursor:default}
+  .addmsg{font-size:12px;color:var(--ok);margin-top:8px;min-height:16px;font-weight:600}
+  .targets h2{font-size:14px;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .tgtcount{background:var(--tgt-soft);color:var(--tgt);font-size:12px;font-weight:800;padding:1px 10px;border-radius:20px}
+  .tcard{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:8px;box-shadow:var(--shadow)}
+  .tcard .tinfo{min-width:0;flex:1}
+  .tcard .tdate{font-weight:800;font-variant-numeric:tabular-nums}
+  .tcard .tdate .dw{color:var(--muted);font-weight:600;font-size:12.5px;margin-left:3px}
+  .tcard .tmeta{font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .pill.yes{background:var(--ok-soft);color:var(--ok)} .pill.no{background:var(--line);color:var(--muted)}
+  .del{font:inherit;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+  .emptyt{color:var(--muted);font-size:13px;padding:16px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+  .foot{color:var(--muted);font-size:11.5px;padding:22px 0 30px;line-height:1.65}
+  .loading{padding:48px 16px;text-align:center;color:var(--muted)}
+</style>
+
+<header>
+  <div class="wrap head-in">
+    <div class="titlerow"><h1>마일리지 좌석 보드</h1><span class="upd" id="upd"></span></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-seats" role="tab" aria-selected="true">🛫 가능한 좌석</button>
+      <button class="tab" id="tab-target" role="tab" aria-selected="false">🎯 타겟 캘린더</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="loading" id="loading">데이터 불러오는 중…</div>
+
+  <!-- ① 가능한 좌석 = 메인 연간 캘린더 -->
+  <section id="panel-seats" hidden>
+    <div class="controls">
+      <div class="frow"><span class="flabel">지역 선택</span>
+        <div class="chips" id="contFilter">
+          <button data-v="all" aria-pressed="true">전체</button>
+          <button data-v="북미" aria-pressed="false">북미</button>
+          <button data-v="일본" aria-pressed="false">일본</button>
+          <button data-v="아시아" aria-pressed="false">아시아</button>
+          <button data-v="유럽" aria-pressed="false">유럽</button>
+          <button data-v="오세아니아" aria-pressed="false">오세아니아</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="lg out"></i>가는편 좌석</span>
+      <span><i class="lg in"></i>오는편 좌석</span>
+      <span><i class="lg tgt"></i>내 타겟</span>
+      <span><i class="lg beyond"></i>아직 오픈 전</span>
+    </div>
+    <p class="openinfo"></p>
+    <div id="overview"></div>
+    <p class="hint">도시별로 가는편·오는편 캘린더가 1년치 전체로 표시됩니다. 좌석이 있는 날만 색으로 칠해져요. 날짜를 누르면 그 방향의 <b>타겟</b>으로 등록됩니다.</p>
+  </section>
+
+  <!-- ② 타겟 캘린더 = 1년 달력에서 직접 눌러 타겟일 지정 -->
+  <section id="panel-target" hidden>
+    <div class="controls">
+      <div class="frow"><span class="flabel">목적지</span><select id="tCity"></select></div>
+    </div>
+    <p class="hint" style="margin:0 0 12px">달력에서 날짜를 누르면 <b>타겟</b>으로 지정/해제됩니다. 좌석이 있는 날은 색으로 칠해져 있어요.</p>
+    <div class="legend">
+      <span><i class="lg out"></i>가는편 좌석</span>
+      <span><i class="lg in"></i>오는편 좌석</span>
+      <span><i class="lg tgt"></i>내 타겟</span>
+      <span><i class="lg beyond"></i>아직 오픈 전</span>
+    </div>
+    <p class="openinfo"></p>
+    <div class="split">
+      <div class="half out">
+        <div class="halfhead">
+          <span class="dirtag out">🛫 가는편 ICN→<b id="tCityOut"></b></span>
+          <span class="halfcnt" id="tCntOut"></span>
+        </div>
+        <div class="year" id="yearTOut"></div>
+      </div>
+      <div class="half in">
+        <div class="halfhead">
+          <span class="dirtag in">🛬 오는편 <b id="tCityIn"></b>→ICN</span>
+          <span class="halfcnt" id="tCntIn"></span>
+        </div>
+        <div class="year" id="yearTIn"></div>
+      </div>
+    </div>
+    <div class="targets">
+      <h2>지정한 타겟 <span class="tgtcount" id="tgtCount">0</span></h2>
+      <div id="tgtList"></div>
+    </div>
+  </section>
+
+  <p class="foot" id="foot" hidden>
+    편도 프레스티지(비즈) 1인 공제 <b>62,500마일</b>(평수기)·성수기 92,500·세금 별도.<br>
+    데이터 출처: zoommytrip.kr 공개 데이터 · 개인/가족용 · 예시 스냅샷(전 도시·매일 갱신은 운영 연결 시).<br>
+    실제 예약은 대한항공 홈페이지에서 직접. 좌석은 수시로 바뀝니다.
+  </p>
+</main>
+
+<script>
+const DOW=["일","월","화","수","목","금","토"];
+const HORIZON_DAYS=360; // 가장 먼 오픈 출발일 = 오늘+이 값. 관측값(2026-11-06 기준 2027-11-01)에 맞춰 360. 틀리면 이 숫자만 조정.
+const $=s=>document.querySelector(s);
+let DB=null;
+let state={ tab:"seats", calCont:"all", tCity:"밴쿠버", targets:loadTargets() };
+function loadTargets(){ try{ return JSON.parse(localStorage.getItem("zw_targets"))||[]; }catch(e){ return []; } }
+function saveTargets(){ try{ localStorage.setItem("zw_targets",JSON.stringify(state.targets)); }catch(e){} }
+
+fetch("data.json").then(r=>r.json()).then(d=>{DB=d;boot();}).catch(()=>{ $("#loading").textContent="데이터를 불러오지 못했습니다."; });
+
+function cityList(){ return DB.cities.map(c=>c.city); }
+function seatsOf(city){ const c=DB.cities.find(x=>x.city===city); return c?c.seats:[]; }
+function seatDatesFor(city,dir){ const s=new Set(); seatsOf(city).forEach(([d,dr])=>{ if(dr===dir)s.add(d); }); return s; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function horizonStr(){ const d=new Date(); d.setDate(d.getDate()+HORIZON_DAYS); return d.toISOString().slice(0,10); }
+function cityOptions(){
+  const g={}; DB.cities.forEach(c=>{(g[c.cont]=g[c.cont]||[]).push(c.city);});
+  return Object.keys(g).map(ct=>`<optgroup label="${ct}">`+g[ct].map(ci=>`<option value="${ci}">${ci}</option>`).join("")+`</optgroup>`).join("");
+}
+function fmtUpd(iso){ const d=new Date(iso),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+function boot(){
+  $("#loading").hidden=true; $("#foot").hidden=false;
+  $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b>";
+  document.querySelectorAll(".openinfo").forEach(el=>el.innerHTML=`현재 예약 가능한 가장 먼 출발일은 <b>${horizonStr()}</b>입니다. 그 이후 날짜는 아직 오픈 전이라 회색으로 표시됩니다.`);
+  const opts=cityOptions(); $("#tCity").innerHTML=opts;
+  if(!cityList().includes(state.tCity)) state.tCity=cityList()[0];
+  $("#tCity").value=state.tCity;
+
+  $("#tab-seats").onclick=()=>setTab("seats"); $("#tab-target").onclick=()=>setTab("target");
+  $("#contFilter").onclick=e=>{ const b=e.target.closest("button"); if(!b)return; state.calCont=b.dataset.v; [...$("#contFilter").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===state.calCont)); renderOverview(); };
+  $("#overview").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; const y=c.closest(".year"); if(!y)return; toggleTarget(y.dataset.city,y.dataset.dir,c.dataset.date); };
+  $("#tCity").onchange=e=>{ state.tCity=e.target.value; renderTargetCal(); };
+  $("#yearTOut").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; toggleTarget(state.tCity,"O",c.dataset.date); };
+  $("#yearTIn").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; toggleTarget(state.tCity,"I",c.dataset.date); };
+
+  setTab(location.hash==="#target"?"target":"seats");
+  renderOverview(); renderTargetCal(); renderTargets();
+}
+function setTab(t){
+  state.tab=t;
+  $("#tab-seats").setAttribute("aria-selected",t==="seats"); $("#tab-target").setAttribute("aria-selected",t==="target");
+  $("#panel-seats").hidden=(t!=="seats"); $("#panel-target").hidden=(t!=="target");
+  try{ history.replaceState(null,"","#"+t); }catch(e){}
+}
+
+// 타겟 공통
+function isTarget(city,dir,date){ return state.targets.some(t=>t.city===city&&t.dir===dir&&t.date===date); }
+function toggleTarget(city,dir,date){
+  const i=state.targets.findIndex(t=>t.city===city&&t.dir===dir&&t.date===date);
+  if(i>=0) state.targets.splice(i,1); else state.targets.push({city,dir,date});
+  saveTargets(); renderOverview(); renderTargetCal(); renderTargets();
+}
+
+// ① 연간 캘린더
+function monthRange(){ const now=new Date(); let y=now.getFullYear(),m=now.getMonth()+1,out=[]; for(let i=0;i<13;i++){out.push(y+"-"+String(m).padStart(2,"0"));m++;if(m>12){m=1;y++;}} return out; }
+function renderYear(city,dir){
+  const seatSet=seatDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  let html="",total=0;
+  for(const ym of monthRange()){
+    const [y,m]=ym.split("-").map(Number);
+    const startDow=new Date(Date.UTC(y,m-1,1)).getUTCDay(), days=new Date(Date.UTC(y,m,0)).getUTCDate();
+    let cells="",cnt=0;
+    for(let i=0;i<startDow;i++) cells+='<div class="mc blank"></div>';
+    for(let day=1;day<=days;day++){
+      const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+      const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
+      if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
+      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), past=date<today;
+      if(hasSeat&&!past) cnt++;
+      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(past)cls+=" past";
+      cells+=`<div class="${cls}" data-date="${date}">${tgt?'<span class="st">★</span>':''}${day}</div>`;
+    }
+    total+=cnt;
+    html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
+      `<div class="mg">`+DOW.map((d,i)=>`<div class="dh${i===0?' sun':''}">${d}</div>`).join("")+cells+`</div></div>`;
+  }
+  return {html,total};
+}
+// ①-전체개요: 좌석 있는 달만 추려 도시별 가는편/오는편 캘린더
+function monthsFor(city,dir){
+  const set=new Set();
+  seatsOf(city).forEach(([d,dr])=>{ if(dr===dir) set.add(d.slice(0,7)); });
+  state.targets.forEach(t=>{ if(t.city===city&&t.dir===dir) set.add(t.date.slice(0,7)); });
+  return monthRange().filter(ym=>set.has(ym));
+}
+function seatCount(city,dir){ const today=todayStr(),hz=horizonStr(); let n=0; seatsOf(city).forEach(([d,dr])=>{ if(dr===dir&&d>=today&&d<=hz)n++; }); return n; }
+function renderYearMonths(city,dir,months){
+  const seatSet=seatDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  let html="";
+  for(const ym of months){
+    const [y,m]=ym.split("-").map(Number);
+    const startDow=new Date(Date.UTC(y,m-1,1)).getUTCDay(), days=new Date(Date.UTC(y,m,0)).getUTCDate();
+    let cells="",cnt=0;
+    for(let i=0;i<startDow;i++) cells+='<div class="mc blank"></div>';
+    for(let day=1;day<=days;day++){
+      const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+      const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
+      if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
+      const hasSeat=seatSet.has(date), tgt=isTarget(city,dir,date), past=date<today;
+      if(hasSeat&&!past) cnt++;
+      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(tgt)cls+=" tgt"; if(past)cls+=" past";
+      cells+=`<div class="${cls}" data-date="${date}">${tgt?'<span class="st">★</span>':''}${day}</div>`;
+    }
+    html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
+      `<div class="mg">`+DOW.map((d,i)=>`<div class="dh${i===0?' sun':''}">${d}</div>`).join("")+cells+`</div></div>`;
+  }
+  return html;
+}
+function renderCitySection(city){
+  const months=monthRange(), oc=seatCount(city,"O"), ic=seatCount(city,"I");
+  const oY=renderYearMonths(city,"O",months), iY=renderYearMonths(city,"I",months);
+  return `<div class="citysec"><h3 class="cityname">${city}</h3><div class="split">`+
+    `<div class="half out"><div class="halfhead"><span class="dirtag out">🛫 가는편 ICN→${city}</span><span class="halfcnt">${oc?`가능일 <b>${oc}일</b>`:'없음'}</span></div><div class="year" data-city="${city}" data-dir="O">${oY}</div></div>`+
+    `<div class="half in"><div class="halfhead"><span class="dirtag in">🛬 오는편 ${city}→ICN</span><span class="halfcnt">${ic?`가능일 <b>${ic}일</b>`:'없음'}</span></div><div class="year" data-city="${city}" data-dir="I">${iY}</div></div>`+
+    `</div></div>`;
+}
+function renderOverview(){
+  const cont=state.calCont, order=["북미","일본","아시아","유럽","오세아니아"], groups={};
+  DB.cities.forEach(c=>{ if(cont!=="all"&&c.cont!==cont)return; (groups[c.cont]=groups[c.cont]||[]).push(c.city); });
+  let html="";
+  for(const ct of order){ if(!groups[ct])continue;
+    html+=`<div class="contgroup"><h2 class="conth">${ct} <span class="ccount">${groups[ct].length}</span></h2>`+groups[ct].map(renderCitySection).join("")+`</div>`;
+  }
+  $("#overview").innerHTML=html||'<div class="emptyt">데이터가 없습니다.</div>';
+}
+function renderTargetCal(){
+  $("#tCityOut").textContent=state.tCity; $("#tCityIn").textContent=state.tCity;
+  $("#yearTOut").innerHTML=renderYear(state.tCity,"O").html;
+  $("#yearTIn").innerHTML=renderYear(state.tCity,"I").html;
+  const to=state.targets.filter(t=>t.city===state.tCity&&t.dir==="O").length;
+  const ti=state.targets.filter(t=>t.city===state.tCity&&t.dir==="I").length;
+  $("#tCntOut").innerHTML=to?`타겟 <b>${to}일</b>`:"타겟 없음";
+  $("#tCntIn").innerHTML=ti?`타겟 <b>${ti}일</b>`:"타겟 없음";
+}
+
+// ② 타겟 목록
+function renderTargets(){
+  $("#tgtCount").textContent=state.targets.length;
+  const box=$("#tgtList");
+  if(!state.targets.length){ box.innerHTML='<div class="emptyt">아직 타겟이 없습니다. 위에서 날짜를 추가하거나, 가능한 좌석 캘린더에서 날짜를 눌러 등록하세요.</div>'; return; }
+  const sorted=[...state.targets].sort((a,b)=>a.date.localeCompare(b.date)||a.city.localeCompare(b.city));
+  box.innerHTML=sorted.map(t=>{
+    const has=seatDatesFor(t.city,t.dir).has(t.date);
+    const dw=DOW[new Date(t.date).getUTCDay()];
+    const dirTxt=t.dir==="O"?`가는편 ICN→${t.city}`:`오는편 ${t.city}→ICN`;
+    return `<div class="tcard"><div class="tinfo"><div class="tdate">${t.date}<span class="dw">(${dw})</span></div><div class="tmeta">${dirTxt}</div></div>`+
+      `<span class="pill ${has?'yes':'no'}">${has?'좌석 있음':'아직 없음'}</span>`+
+      `<button class="del" data-k="${t.city}|${t.dir}|${t.date}" aria-label="삭제">×</button></div>`;
+  }).join("");
+  box.querySelectorAll(".del").forEach(b=>b.onclick=()=>{ const [c,d,dt]=b.dataset.k.split("|"); toggleTarget(c,d,dt); });
+}
+</script>

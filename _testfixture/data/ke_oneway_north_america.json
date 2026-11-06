@@ -1,0 +1,7 @@
+{
+  "file": "ke_oneway_north_america.json",
+  "airline": "KE", "type": "oneway", "continent": "north_america",
+  "parts": [
+    { "month": "2026-11", "url": "ke_oneway_north_america_2026-11.json" }
+  ]
+}

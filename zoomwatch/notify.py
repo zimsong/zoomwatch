@@ -102,11 +102,20 @@ def send_kakao(text):
     tok = kakao_refresh_access_token(rest, refresh)
     access = tok["access_token"]
     kakao_send_memo(access, text)
-    # Kakao가 refresh_token을 갱신해 주면 알려준다(2개월마다 교체 필요).
+    # Kakao가 refresh_token을 갱신해 주면(약 2개월마다) 알려준다.
+    # 공개 저장소에서는 Actions 로그가 공개되므로 토큰 값을 로그에 남기지 않는다.
+    # 로그에는 마스킹(::add-mask::)하고, 실제 값은 본인 카톡('나와의 채팅')으로만 전달.
     if tok.get("refresh_token"):
+        new_rt = tok["refresh_token"]
+        print("::add-mask::" + new_rt)
         print("::warning:: 카카오가 새 refresh_token을 발급했습니다. "
-              "GitHub Secret(KAKAO_REFRESH_TOKEN)을 아래 값으로 교체하세요:")
-        print("NEW_KAKAO_REFRESH_TOKEN=" + tok["refresh_token"])
+              "카톡 '나와의 채팅'으로 보낸 값으로 GitHub Secret(KAKAO_REFRESH_TOKEN)을 교체하세요.")
+        try:
+            kakao_send_memo(access,
+                            "🔑 zoomwatch: 카카오 refresh_token 갱신됨\n"
+                            "GitHub Secret KAKAO_REFRESH_TOKEN 을 아래 값으로 교체하세요:\n" + new_rt)
+        except Exception:
+            pass
 
 
 # ---------- 텔레그램 (교체용) ----------

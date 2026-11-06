@@ -133,8 +133,8 @@ ZOOMWATCH_BASE=./_testfixture/data NOTIFY_PROVIDER=console python3 main.py
 
 ## 6. 유지보수 메모
 
-- 카카오 `refresh_token`은 약 2개월마다 교체가 필요할 수 있습니다. 실행 로그(Actions)에 `NEW_KAKAO_REFRESH_TOKEN=...`
-  경고가 뜨면 그 값으로 `KAKAO_REFRESH_TOKEN` 시크릿을 교체하세요.
+- 카카오 `refresh_token`은 약 2개월마다 교체가 필요할 수 있습니다. 갱신되면 **본인 카톡('나와의 채팅')으로 새 값이 전송**됩니다
+  (공개 저장소라 Actions 로그에는 토큰을 남기지 않음). 그 값으로 `KAKAO_REFRESH_TOKEN` 시크릿을 교체하세요.
 - 데이터 구조(컬럼·경로)는 2026-11-06 기준입니다. zoommytrip이 바꾸면 `zoomwatch/source.py`의 정규화 부분을 손봐야 합니다.
 ```
 데이터 출처: https://zoommytrip.kr/data/index.json  (BASE = https://zoommytrip.kr/data/)

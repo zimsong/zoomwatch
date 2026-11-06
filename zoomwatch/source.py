@@ -56,6 +56,55 @@ def _get_json(url, timeout=30):
         ) from e
 
 
+# ---- 브라우저 기반 수집 (JS 봇 차단 통과용) ----
+# zoommytrip은 접속 시 JS 챌린지(cupid.js: 쿠키 계산 후 재요청)를 요구한다.
+# 일반 HTTP로는 HTML 챌린지 페이지만 돌아와 JSON 파싱이 실패하므로,
+# 실제 브라우저(Playwright/Chromium)로 JS를 실행해 통과시킨다.
+# 환경변수 ZOOMWATCH_FETCH=browser 일 때만 사용.
+_PW_STATE = None
+
+
+def _browser_session():
+    global _PW_STATE
+    if _PW_STATE is not None:
+        return _PW_STATE
+    from playwright.sync_api import sync_playwright
+    pw = sync_playwright().start()
+    browser = pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+    ctx = browser.new_context(user_agent=BROWSER_UA, locale="ko-KR")
+    page = ctx.new_page()
+    # 데이터 경로로 진입해 JS 챌린지가 쿠키를 세팅하도록 한 번 통과시킨다.
+    page.goto("https://zoommytrip.kr/data/index.json",
+              wait_until="networkidle", timeout=60000)
+    _PW_STATE = (pw, browser, ctx, page)
+    return _PW_STATE
+
+
+def _browser_get_json(url, timeout=60000):
+    _, _, ctx, page = _browser_session()
+    resp = ctx.request.get(url, headers={"Referer": "https://zoommytrip.kr/"}, timeout=timeout)
+    raw = resp.body()
+    try:
+        return json.loads(raw)
+    except Exception:
+        # 쿠키가 아직이면 페이지로 직접 이동해 챌린지를 통과한 뒤 본문을 파싱
+        page.goto(url, wait_until="networkidle", timeout=timeout)
+        el = page.query_selector("pre")
+        txt = el.inner_text() if el else page.evaluate("document.body.innerText")
+        return json.loads(txt)
+
+
+def close_browser():
+    global _PW_STATE
+    if _PW_STATE:
+        pw, browser, ctx, page = _PW_STATE
+        try:
+            browser.close()
+        finally:
+            pw.stop()
+        _PW_STATE = None
+
+
 def _read_local(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -72,6 +121,8 @@ def _resolve(base, ref):
 def _load(base, ref):
     url = _resolve(base, ref)
     if url.startswith("http://") or url.startswith("https://"):
+        if os.environ.get("ZOOMWATCH_FETCH") == "browser":
+            return _browser_get_json(url)
         return _get_json(url)
     return _read_local(url)
 

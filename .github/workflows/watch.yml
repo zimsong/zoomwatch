@@ -27,8 +27,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Playwright (zoommytrip JS 챌린지 통과용 브라우저)
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
       - name: Run zoomwatch
         env:
+          ZOOMWATCH_FETCH: browser
           NOTIFY_PROVIDER: ${{ secrets.NOTIFY_PROVIDER }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}

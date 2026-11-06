@@ -1,4 +1,4 @@
-<title>마일리지 좌석 보드</title>
+<title>마일리지 항공권 관리</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
   /* 캘린더 메인. ①가능한 좌석=연간 캘린더(목적지·방향→가능일 표시) ②타겟=특정 날짜 지정 설정페이지. 편도·비즈 전용 */
@@ -27,10 +27,15 @@
 
   header{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line)}
   .head-in{padding-block:11px 0}
-  .titlerow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
-  h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em}
-  .upd{font-size:11.5px;color:var(--muted);font-weight:600}.upd b{color:var(--ok)}
-  .tabs{display:flex;gap:4px;margin-top:10px}
+  .sitebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .brand{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--fg)}
+  .brandmark{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,var(--out),var(--in));flex:none}
+  .mainnav{display:flex;gap:4px;flex-wrap:wrap}
+  .navitem{font:inherit;font-size:13.5px;font-weight:700;padding:6px 12px;border-radius:8px;color:var(--muted);text-decoration:none;cursor:pointer;border:0;background:transparent;white-space:nowrap}
+  .navitem.active{background:var(--accent-soft);color:var(--accent)}
+  .subbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .upd{font-size:11.5px;color:var(--muted);font-weight:600}.upd b{color:var(--ok)} .upd .src{color:var(--muted)} .upd .src a{color:var(--accent);text-decoration:none}
+  .tabs{display:flex;gap:4px}
   .tab{font:inherit;font-size:13.5px;font-weight:700;padding:9px 14px;border:0;border-bottom:2.5px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
   .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
 
@@ -113,10 +118,16 @@
 
 <header>
   <div class="wrap head-in">
-    <div class="titlerow"><h1>마일리지 좌석 보드</h1><span class="upd" id="upd"></span></div>
-    <div class="tabs" role="tablist">
-      <button class="tab" id="tab-seats" role="tab" aria-selected="true">🛫 가능한 좌석</button>
-      <button class="tab" id="tab-target" role="tab" aria-selected="false">🎯 타겟 캘린더</button>
+    <div class="sitebar">
+      <span class="brand"><span class="brandmark"></span><span id="siteName"></span></span>
+      <nav class="mainnav" id="mainnav"></nav>
+    </div>
+    <div class="subbar">
+      <div class="tabs" role="tablist">
+        <button class="tab" id="tab-seats" role="tab" aria-selected="true">🛫 가능한 좌석</button>
+        <button class="tab" id="tab-target" role="tab" aria-selected="false">🎯 타겟 캘린더</button>
+      </div>
+      <span class="upd" id="upd"></span>
     </div>
   </div>
 </header>
@@ -194,6 +205,13 @@
 <script>
 const DOW=["일","월","화","수","목","금","토"];
 const HORIZON_DAYS=360; // 가장 먼 오픈 출발일 = 오늘+이 값. 관측값(2026-11-06 기준 2027-11-01)에 맞춰 360. 틀리면 이 숫자만 조정.
+// 사이트 상위 메뉴. 나중에 큰 사이트로 확장할 때 여기에 메뉴만 추가하면 됨.
+const SITE_NAME="나의 사이트"; // ← 사이트 이름으로 바꾸세요
+const MENUS=[
+  {id:"mileage", label:"마일리지 항공권 관리", active:true},
+  // 예) {id:"hotel", label:"호텔 관리", href:"../hotel/"},
+];
+const DATA_SOURCE={name:"zoommytrip.kr", url:"https://zoommytrip.kr/"};
 const $=s=>document.querySelector(s);
 let DB=null;
 let state={ tab:"seats", calCont:"all", tCity:"밴쿠버", targets:loadTargets() };
@@ -215,7 +233,9 @@ function fmtUpd(iso){ const d=new Date(iso),p=n=>String(n).padStart(2,"0"); retu
 
 function boot(){
   $("#loading").hidden=true; $("#foot").hidden=false;
-  $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b>";
+  $("#siteName").textContent=SITE_NAME;
+  $("#mainnav").innerHTML=MENUS.map(m=>`<a class="navitem${m.active?' active':''}"${m.href?` href="${m.href}"`:''}>${m.label}</a>`).join("");
+  $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b> <span class=\"src\">· 출처 <a href=\""+DATA_SOURCE.url+"\" target=\"_blank\" rel=\"noopener\">"+DATA_SOURCE.name+"</a></span>";
   document.querySelectorAll(".openinfo").forEach(el=>el.innerHTML=`현재 예약 가능한 가장 먼 출발일은 <b>${horizonStr()}</b>입니다. 그 이후 날짜는 아직 오픈 전이라 회색으로 표시됩니다.`);
   const opts=cityOptions(); $("#tCity").innerHTML=opts;
   if(!cityList().includes(state.tCity)) state.tCity=cityList()[0];

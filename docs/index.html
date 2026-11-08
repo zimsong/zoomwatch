@@ -376,7 +376,7 @@ function removeTrip(id){ state.trips=state.trips.filter(t=>t.id!==id); saveDraft
 function afterTripChange(){ refreshTgt(); renderOverview(); renderTargetCal(); renderTargets(); renderSaveState(); }
 
 // ① 연간 캘린더
-function monthRange(){ const now=new Date(); let y=now.getFullYear(),m=now.getMonth()+1,out=[]; for(let i=0;i<16;i++){out.push(y+"-"+String(m).padStart(2,"0"));m++;if(m>12){m=1;y++;}} return out; }
+function monthRange(){ const now=new Date(); let y=now.getFullYear(),m=now.getMonth()+1,out=[]; for(let i=0;i<15;i++){out.push(y+"-"+String(m).padStart(2,"0"));m++;if(m>12){m=1;y++;}} return out; }
 function renderYear(city,dir){
   const seatSet=seatDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
   const draftDate=dir==="O"?state.draft.out:state.draft.in;

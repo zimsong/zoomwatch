@@ -17,7 +17,7 @@ import json
 import os
 import sys
 
-from zoomwatch import source, logic, notify, board, history, trips_alert
+from zoomwatch import source, logic, notify, board, history, trips_alert, daily_new
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WATCHLIST_PATH = os.path.join(ROOT, "config", "watchlist.json")
@@ -27,6 +27,7 @@ SEEN_BOARD_PATH = os.path.join(ROOT, "state", "seen_board.json")
 HISTORY_EVENTS_PATH = os.path.join(ROOT, "history", "events.jsonl")
 TRIPS_PATH = os.path.join(ROOT, "docs", "trips.json")
 TRIPS_SEEN_PATH = os.path.join(ROOT, "state", "trips_seen.json")
+DAILY_NEW_PATH = os.path.join(ROOT, "state", "daily_new.json")
 
 
 def load_watches():
@@ -68,8 +69,11 @@ def main():
     # 보드용 data.json 출력(매 실행, 알림 로직과 무관하게 전체 좌석을 보드로 내보냄)
     bd = None
     try:
-        bd = board.write_board_data(DOCS_DATA_PATH, base=base)
-        print(f"보드 데이터 출력: docs/data.json ({len(bd['cities'])}개 도시, updated={bd['updated']})")
+        bd = board.build_board_data(base=base)
+        # 화면 '새로 뜬 좌석' 표식을 '전날(기준선) 대비 신규'로 재계산해 덮어씀
+        dn = daily_new.mark_new(bd, DAILY_NEW_PATH)
+        board.dump(DOCS_DATA_PATH, bd)
+        print(f"보드 데이터 출력: docs/data.json ({len(bd['cities'])}개 도시, updated={bd['updated']}, 오늘 신규 {dn['new']}건/기준선 {dn['baseline']})")
     except Exception as e:
         print(f"::warning:: 보드 데이터 출력 실패: {type(e).__name__}: {e}")
 

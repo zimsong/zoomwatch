@@ -86,9 +86,12 @@ def build_board_data(base=None, airline="KE", cabin="business"):
     }
 
 
-def write_board_data(path, base=None):
-    data = build_board_data(base)
+def dump(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     return data
+
+
+def write_board_data(path, base=None):
+    return dump(path, build_board_data(base))

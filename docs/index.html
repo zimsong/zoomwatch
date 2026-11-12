@@ -5,19 +5,19 @@
   :root{
     --bg:#f3f5f8; --surface:#ffffff; --line:#e2e7ee; --fg:#182029; --muted:#5c6673;
     --accent:#1d6fd6; --accent-soft:#e7f0fb; --out:#1d6fd6; --in:#7a4ad6; --in-soft:#efe7fb; --out-soft:#e7f0fb;
-    --ok:#127a4a; --ok-soft:#e2f3ea; --new:#c2410c; --new-soft:#fdeadd; --wknd:#b23b5e; --tgt:#b8860b; --tgt-soft:#faf0d2; --tgtdot:#e11d48; --newflag:#f59e0b; --trip:#16366b; --trip-soft:#dbe6fb;
+    --ok:#127a4a; --ok-soft:#e2f3ea; --new:#c2410c; --new-soft:#fdeadd; --wknd:#b23b5e; --tgt:#b8860b; --tgt-soft:#faf0d2; --tgtdot:#e11d48; --newflag:#f59e0b; --trip:#16366b; --trip-soft:#dbe6fb; --upg:#0e7490; --upg-soft:#def0f5;
     --shadow:0 1px 2px rgba(20,30,45,.06),0 2px 8px rgba(20,30,45,.05);
     --f-body:"Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
     --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
     --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
-    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; color-scheme:dark;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; --upg:#4cc5d6; --upg-soft:#123038; color-scheme:dark;
   }}
   :root[data-theme="dark"]{
     --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
     --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
-    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; color-scheme:dark;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; --upg:#4cc5d6; --upg-soft:#123038; color-scheme:dark;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -52,7 +52,7 @@
   .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:14px}
   .legend span{display:inline-flex;align-items:center;gap:5px}
   .lg{width:12px;height:12px;border-radius:4px;display:inline-block}
-  .lg.seat{background:var(--ok)} .lg.out{background:var(--out)} .lg.in{background:var(--in)} .lg.tgt{background:var(--trip)} .lg.new{background:var(--newflag)} .lg.beyond{background:var(--line)} .lg.holiday{background:var(--wknd)}
+  .lg.seat{background:var(--ok)} .lg.out{background:var(--out)} .lg.in{background:var(--in)} .lg.tgt{background:var(--trip)} .lg.new{background:var(--newflag)} .lg.beyond{background:var(--line)} .lg.holiday{background:var(--wknd)} .lg.upg{background:var(--upg-soft);box-shadow:inset 0 0 0 2px var(--upg)}
   .openinfo{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.5}.openinfo b{color:var(--fg)}
 
   /* 분할 화면: 가는편(위) / 오는편(아래) */
@@ -63,7 +63,7 @@
   .halfhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .dirtag{font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;gap:6px}
   .dirtag.out{color:var(--out)} .dirtag.in{color:var(--in)}
-  .halfcnt{font-size:12px;font-weight:700;color:var(--muted)}.halfcnt b{color:var(--ok)}
+  .halfcnt{font-size:12px;font-weight:700;color:var(--muted)}.halfcnt b{color:var(--ok)}.halfcnt .upgc,.halfcnt .upgc b{color:var(--upg)}
   .year{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
   .mini{min-width:0}
   .mini .mt{font-size:12.5px;font-weight:800;margin-bottom:5px;display:flex;justify-content:space-between;align-items:baseline}
@@ -83,8 +83,11 @@
   .mc.band{background:var(--trip-soft);font-weight:700}
   .mc.seat{background:var(--ok);color:#fff;font-weight:800}
   .mc.seat.out{background:var(--out)} .mc.seat.in{background:var(--in)}
+  .mc.upg{background:var(--upg-soft);color:var(--upg);font-weight:800;box-shadow:inset 0 0 0 1.5px var(--upg)}
   .mc.day.tripend{background:var(--trip);color:#fff;font-weight:800;border-radius:7px}
   .mc.new::before{content:"";position:absolute;top:0;right:0;width:0;height:0;border-top:8px solid var(--newflag);border-left:8px solid transparent}
+  .mc.upg::after,.mc.seat.bizupg::after{content:"U";position:absolute;right:1.5px;bottom:0;font-size:7.5px;line-height:1.1;font-weight:900;letter-spacing:0}
+  .mc.upg::after{color:var(--upg)} .mc.seat.bizupg::after{color:#fff}
   .mc.draft{outline:2px solid var(--accent);outline-offset:-2px;font-weight:800;border-radius:7px}
   .hint{font-size:12px;color:var(--muted);margin:14px 0 4px}
 
@@ -192,6 +195,7 @@
       <span><i class="lg new"></i>새로 뜬 좌석</span>
       <span><i class="lg beyond"></i>아직 오픈 전</span>
       <span><i class="lg holiday"></i>공휴일</span>
+      <span><i class="lg upg"></i>업그레이드(U)</span>
     </div>
     <p class="openinfo"></p>
     <div id="overview"></div>
@@ -223,6 +227,7 @@
       <span><i class="lg new"></i>새로 뜬 좌석</span>
       <span><i class="lg beyond"></i>아직 오픈 전</span>
       <span><i class="lg holiday"></i>공휴일</span>
+      <span><i class="lg upg"></i>업그레이드(U)</span>
     </div>
     <p class="openinfo"></p>
     <div class="split">
@@ -262,6 +267,7 @@
 
   <p class="foot" id="foot" hidden>
     편도 프레스티지(비즈) 1인 공제 <b>62,500마일</b>(평수기)·성수기 92,500·세금 별도.<br>
+    <b style="color:var(--upg)">U</b> = 업그레이드 보너스(유상 항공권을 마일로 상위 클래스 승급). 좌석 가용 여부만 표시 — 승급 조건·공제 마일은 대한항공 홈페이지에서 확인.<br>
     개인/가족용 · 매일 자동 갱신.<br>
     실제 예약은 대한항공 홈페이지에서 직접. 좌석은 수시로 바뀝니다.
   </p>
@@ -327,7 +333,8 @@ fetch("data.json"+_bust,{cache:"no-store"}).then(r=>r.json()).then(d=>{
 
 function cityList(){ return DB.cities.map(c=>c.city); }
 function seatsOf(city){ const c=DB.cities.find(x=>x.city===city); return c?c.seats:[]; }
-function seatDatesFor(city,dir){ const s=new Set(); seatsOf(city).forEach(([d,dr])=>{ if(dr===dir)s.add(d); }); return s; }
+function bizDatesFor(city,dir){ const s=new Set(); seatsOf(city).forEach(x=>{ if(x[1]===dir && (x[4]||'B')!=='U')s.add(x[0]); }); return s; }
+function upgDatesFor(city,dir){ const s=new Set(); seatsOf(city).forEach(x=>{ if(x[1]===dir && (x[4]||'B')==='U')s.add(x[0]); }); return s; }
 function newDatesFor(city,dir){ const s=new Set(); seatsOf(city).forEach(x=>{ if(x[1]===dir && x[3])s.add(x[0]); }); return s; }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function horizonStr(){ const d=new Date(); d.setDate(d.getDate()+HORIZON_DAYS); return d.toISOString().slice(0,10); }
@@ -399,7 +406,7 @@ function afterTripChange(){ refreshTgt(); renderOverview(); renderTargetCal(); r
 // ① 연간 캘린더
 function monthRange(){ const now=new Date(); let y=now.getFullYear(),m=now.getMonth()+1,out=[]; for(let i=0;i<15;i++){out.push(y+"-"+String(m).padStart(2,"0"));m++;if(m>12){m=1;y++;}} return out; }
 function renderYear(city,dir){
-  const seatSet=seatDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  const bizSet=bizDatesFor(city,dir), upgSet=upgDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
   const draftDate=dir==="O"?state.draft.out:state.draft.in;
   let html="",total=0;
   for(const ym of monthRange()){
@@ -411,12 +418,12 @@ function renderYear(city,dir){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
       const beyond=date>horizon, past=date<today;
-      const hasSeat=!beyond&&seatSet.has(date), nw=!beyond&&newSet.has(date);
+      const hasBiz=!beyond&&bizSet.has(date), hasUpg=!beyond&&upgSet.has(date), hasSeat=hasBiz||hasUpg, nw=!beyond&&newSet.has(date);
       const tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), hol=HOLIDAYS[date];
-      if(hasSeat&&!past) cnt++;
+      if(hasBiz&&!past) cnt++;
       let cls="mc day";
       if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
-      if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new";
+      if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
       if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
       if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
       cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
@@ -428,9 +435,10 @@ function renderYear(city,dir){
   return {html,total};
 }
 // ①-전체개요: 도시별 가는편/오는편 캘린더(13개월 전체)
-function seatCount(city,dir){ const today=todayStr(),hz=horizonStr(); let n=0; seatsOf(city).forEach(([d,dr])=>{ if(dr===dir&&d>=today&&d<=hz)n++; }); return n; }
+function seatCount(city,dir){ const today=todayStr(),hz=horizonStr(); let n=0; seatsOf(city).forEach(x=>{ if(x[1]===dir&&(x[4]||'B')!=='U'&&x[0]>=today&&x[0]<=hz)n++; }); return n; }
+function upgCount(city,dir){ const today=todayStr(),hz=horizonStr(); let n=0; seatsOf(city).forEach(x=>{ if(x[1]===dir&&(x[4]||'B')==='U'&&x[0]>=today&&x[0]<=hz)n++; }); return n; }
 function renderYearMonths(city,dir,months){
-  const seatSet=seatDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
+  const bizSet=bizDatesFor(city,dir), upgSet=upgDatesFor(city,dir), newSet=newDatesFor(city,dir), today=todayStr(), horizon=horizonStr(), dcls=dir==="O"?"out":"in";
   let html="";
   for(const ym of months){
     const [y,m]=ym.split("-").map(Number);
@@ -441,12 +449,12 @@ function renderYearMonths(city,dir,months){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
       const beyond=date>horizon, past=date<today;
-      const hasSeat=!beyond&&seatSet.has(date), nw=!beyond&&newSet.has(date);
+      const hasBiz=!beyond&&bizSet.has(date), hasUpg=!beyond&&upgSet.has(date), hasSeat=hasBiz||hasUpg, nw=!beyond&&newSet.has(date);
       const tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), hol=HOLIDAYS[date];
-      if(hasSeat&&!past) cnt++;
+      if(hasBiz&&!past) cnt++;
       let cls="mc day";
       if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
-      if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new";
+      if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
       if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
       if(past)cls+=" past";
       cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
@@ -457,11 +465,12 @@ function renderYearMonths(city,dir,months){
   return html;
 }
 function renderCitySection(city){
-  const months=monthRange(), oc=seatCount(city,"O"), ic=seatCount(city,"I");
+  const months=monthRange(), oc=seatCount(city,"O"), ic=seatCount(city,"I"), ou=upgCount(city,"O"), iu=upgCount(city,"I");
   const oY=renderYearMonths(city,"O",months), iY=renderYearMonths(city,"I",months);
+  const cnt=(biz,upg)=>{ const a=[]; if(biz)a.push(`가능일 <b>${biz}일</b>`); if(upg)a.push(`<span class="upgc">U <b>${upg}일</b></span>`); return a.length?a.join(" · "):'없음'; };
   return `<div class="citysec"><h3 class="cityname">${city}</h3><div class="split">`+
-    `<div class="half out"><div class="halfhead"><span class="dirtag out">🛫 가는편 ICN→${city}</span><span class="halfcnt">${oc?`가능일 <b>${oc}일</b>`:'없음'}</span></div><div class="year" data-city="${city}" data-dir="O">${oY}</div></div>`+
-    `<div class="half in"><div class="halfhead"><span class="dirtag in">🛬 오는편 ${city}→ICN</span><span class="halfcnt">${ic?`가능일 <b>${ic}일</b>`:'없음'}</span></div><div class="year" data-city="${city}" data-dir="I">${iY}</div></div>`+
+    `<div class="half out"><div class="halfhead"><span class="dirtag out">🛫 가는편 ICN→${city}</span><span class="halfcnt">${cnt(oc,ou)}</span></div><div class="year" data-city="${city}" data-dir="O">${oY}</div></div>`+
+    `<div class="half in"><div class="halfhead"><span class="dirtag in">🛬 오는편 ${city}→ICN</span><span class="halfcnt">${cnt(ic,iu)}</span></div><div class="year" data-city="${city}" data-dir="I">${iY}</div></div>`+
     `</div></div>`;
 }
 // 대륙 랜드마크 배너 (직접 그린 SVG 벡터)

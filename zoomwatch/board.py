@@ -1,7 +1,7 @@
 """
 보드용 data.json 생성 모듈.
 
-zoommytrip 공개 데이터에서 **편도(oneway)·비즈니스(프레스티지) 좌석만** 뽑아
+zoommytrip 공개 데이터에서 **편도(oneway)·비즈니스(프레스티지)+업그레이드 좌석을** 뽑아
 좌석 보드(docs/index.html)가 바로 읽는 포맷으로 docs/data.json을 만든다.
 
 보드 포맷:
@@ -10,7 +10,8 @@ zoommytrip 공개 데이터에서 **편도(oneway)·비즈니스(프레스티지
     "note": "...",
     "cities": [
       {"cont": "북미", "city": "밴쿠버",
-       "seats": [[date, dir('O'|'I'), dep_time, is_new(0|1)], ...]},
+       "seats": [[date, dir('O'|'I'), dep_time, is_new(0|1), tag('B'|'U')], ...]},
+       # tag: B=프레스티지(비즈) 보너스, U=업그레이드 보너스
       ...
     ]
   }
@@ -42,15 +43,20 @@ def _available(seat):
     return seat is not None and str(seat).strip().upper() == "O"
 
 
-def build_board_data(base=None, airline="KE", cabin="business"):
+# 보드 좌석 등급 태그: B=프레스티지(비즈) 보너스, U=업그레이드 보너스
+CABIN_TAG = {"business": "B", "upgrade": "U"}
+
+
+def build_board_data(base=None, airline="KE", cabins=("business", "upgrade")):
     index = source.load_index(base)
     files = source.files_for(index, airline=airline, trip="oneway")
 
-    bycity = {}  # city -> {"cont": 한글, "seats": {(date,dir): (time, is_new)}}
+    bycity = {}  # city -> {"cont": 한글, "seats": {(date,dir,tag): (time, is_new)}}
     for f in files:
         cont_ko = CONT_KO.get(f.get("continent"), f.get("continent") or "기타")
         for rec in source.fetch_records(index, f):
-            if rec.get("cabin") != cabin:
+            cabin = rec.get("cabin")
+            if cabin not in cabins:
                 continue
             if not _available(rec.get("seat_out")):
                 continue
@@ -59,20 +65,22 @@ def build_board_data(base=None, airline="KE", cabin="business"):
             if not city or not date:
                 continue
             direction = "O" if rec.get("direction") == "outbound" else "I"
+            tag = CABIN_TAG.get(cabin, "B")
             t = rec.get("dep_time") or ""
             isnew = 1 if rec.get("is_new") else 0
             entry = bycity.setdefault(city, {"cont": cont_ko, "seats": {}})
-            key = (date, direction)
+            key = (date, direction, tag)
             prev = entry["seats"].get(key)
-            # 같은 날짜·방향 중복 시 신규 플래그가 있으면 살림
+            # 같은 날짜·방향·등급 중복 시 신규 플래그가 있으면 살림
             if prev is None or (isnew and not prev[1]):
                 entry["seats"][key] = (t, isnew)
 
     cities = []
     for city, v in bycity.items():
-        seats = [[d, dr, t, n]
-                 for (d, dr), (t, n) in sorted(v["seats"].items(),
-                                               key=lambda x: (x[0][0], x[0][1]))]
+        # 좌석 포맷: [date, dir('O'/'I'), dep_time, is_new(0/1), tag('B'/'U')]
+        seats = [[d, dr, t, n, tag]
+                 for (d, dr, tag), (t, n) in sorted(v["seats"].items(),
+                                                    key=lambda x: (x[0][0], x[0][1], x[0][2]))]
         cities.append({"cont": v["cont"], "city": city, "seats": seats})
 
     # 대륙 순서 → 좌석 많은 도시 우선(밴쿠버가 북미 맨 위로)
@@ -81,7 +89,7 @@ def build_board_data(base=None, airline="KE", cabin="business"):
     updated = datetime.now(KST).isoformat(timespec="minutes")
     return {
         "updated": updated,
-        "note": "zoommytrip 공개 데이터 기반 · 편도 프레스티지(비즈) · 매일 자동 갱신",
+        "note": "zoommytrip 공개 데이터 기반 · 편도 프레스티지(비즈)+업그레이드(U) · 매일 자동 갱신",
         "cities": cities,
     }
 

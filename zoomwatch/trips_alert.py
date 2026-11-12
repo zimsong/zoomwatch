@@ -29,12 +29,13 @@ def load_trips(path):
 
 
 def _avail_set(board_data):
-    """보드 데이터 → 가능한 'city|dir|date' 집합."""
+    """보드 데이터 → 가능한 'city|dir|date' 집합.
+    여행 알림은 프레스티지(비즈) 보너스 좌석만 대상으로 한다(업그레이드 U는 제외)."""
     s = set()
     for c in board_data.get("cities", []):
         city = c.get("city", "")
         for seat in c.get("seats", []):
-            if len(seat) >= 2:
+            if len(seat) >= 2 and (seat[4] if len(seat) >= 5 else "B") != "U":
                 s.add(city + "|" + seat[1] + "|" + seat[0])
     return s
 

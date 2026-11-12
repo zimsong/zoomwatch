@@ -10,7 +10,7 @@
 - 최초 실행(상태 없음)에는 기준선=현재라 신규 0건(한꺼번에 쏟아짐 방지).
 
 상태 파일: state/daily_new.json = {date, baseline:[key...], last:[key...]}
-key 형식: "city|dir|date"  (dir: O 가는편 / I 오는편)
+key 형식: "city|dir|date|tag"  (dir: O 가는편 / I 오는편, tag: B 비즈 / U 업그레이드)
 
 board.build_board_data() 결과(dict)의 각 좌석 is_new(seat[3])를 이 기준으로 덮어쓴다.
 (zoommytrip 자체 is_new 대신 우리의 '전날 대비' 기준을 쓴다.)
@@ -22,13 +22,18 @@ from datetime import datetime, timezone, timedelta
 KST = timezone(timedelta(hours=9))
 
 
+def _seat_key(city, seat):
+    tag = seat[4] if len(seat) >= 5 else "B"
+    return city + "|" + seat[1] + "|" + seat[0] + "|" + tag
+
+
 def _keys(board_data):
     s = set()
     for c in board_data.get("cities", []):
         city = c.get("city", "")
         for seat in c.get("seats", []):
             if len(seat) >= 2:
-                s.add(city + "|" + seat[1] + "|" + seat[0])
+                s.add(_seat_key(city, seat))
     return s
 
 
@@ -72,7 +77,7 @@ def mark_new(board_data, state_path):
         for seat in c.get("seats", []):
             if len(seat) < 2:
                 continue
-            k = city + "|" + seat[1] + "|" + seat[0]
+            k = _seat_key(city, seat)
             v = 1 if k in new_keys else 0
             if len(seat) >= 4:
                 seat[3] = v

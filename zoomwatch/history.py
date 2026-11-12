@@ -19,8 +19,8 @@ import os
 SEP = "|"
 
 
-def _key(cont, city, direction, date):
-    return SEP.join([cont, city, direction, date])
+def _key(cont, city, direction, date, tag="B"):
+    return SEP.join([cont, city, direction, date, tag])
 
 
 def _load_prev(path):
@@ -46,12 +46,13 @@ def update_from_board(board_data, seen_path, events_path):
     for c in board_data.get("cities", []):
         cont, city = c.get("cont", ""), c.get("city", "")
         for s in c.get("seats", []):
-            # s = [date, dir('O'|'I'), dep_time, is_new]
+            # s = [date, dir('O'|'I'), dep_time, is_new, tag('B'|'U')]
             date = s[0] if len(s) > 0 else ""
             direction = s[1] if len(s) > 1 else ""
             dep_time = s[2] if len(s) > 2 else ""
+            tag = s[4] if len(s) > 4 else "B"
             if date and direction:
-                cur[_key(cont, city, direction, date)] = dep_time
+                cur[_key(cont, city, direction, date, tag)] = dep_time
 
     prev = _load_prev(seen_path)
     _save(seen_path, cur)
@@ -59,17 +60,22 @@ def update_from_board(board_data, seen_path, events_path):
     if prev is None:
         # 첫 실행: 기준선만 저장하고 이벤트는 남기지 않는다(전부 appear로 쏟아지는 것 방지).
         return {"first_run": True, "baseline": len(cur)}
+    if any(k.count(SEP) < 4 for k in prev):
+        # 등급 태그(B/U) 도입 전의 구 형식 키가 섞임 → 이번 실행은 기준선만 재설정(일회성 폭주 방지).
+        return {"first_run": True, "baseline": len(cur), "migrated": True}
 
     prev_keys, cur_keys = set(prev.keys()), set(cur.keys())
     appeared = cur_keys - prev_keys
     disappeared = prev_keys - cur_keys
 
     def ev(kind, k, dep_time):
-        cont, city, direction, date = k.split(SEP)
+        parts = k.split(SEP)
+        cont, city, direction, date = parts[0], parts[1], parts[2], parts[3]
+        tag = parts[4] if len(parts) > 4 else "B"
         return json.dumps({
             "ts": ts, "event": kind,
             "cont": cont, "city": city, "dir": direction,
-            "date": date, "dep_time": dep_time,
+            "date": date, "dep_time": dep_time, "tag": tag,
         }, ensure_ascii=False)
 
     lines = [ev("appear", k, cur[k]) for k in sorted(appeared)]

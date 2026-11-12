@@ -150,6 +150,10 @@
   .leg{font-size:12.5px;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
   .leg .lgdir{font-weight:800}
   .pill.both{background:var(--ok);color:#fff}
+  .pill.upgp{background:var(--upg-soft);color:var(--upg)}
+  .tcard.donetrip{opacity:.5}
+  .pasttoggle{font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;width:100%;text-align:left;margin-top:2px}
+  .pastwrap{margin-top:8px}
   .savebox{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
   .savehd{font-size:12.5px;color:var(--muted);margin-bottom:8px;line-height:1.5}
   #saveJson{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);padding:10px;resize:vertical}
@@ -315,9 +319,14 @@ function saveDraftTrips(){ try{ localStorage.setItem("zw_trips",JSON.stringify(s
 function clearDraftTrips(){ try{ localStorage.removeItem("zw_trips"); }catch(e){} }
 function tripsDirty(){ return norm(state.trips)!==norm(state.committed); }
 function eachDate(a,b,cb){ let s=a,e=b; if(s>e){const t=s;s=e;e=t;} let d=new Date(s+"T00:00:00Z"); const end=new Date(e+"T00:00:00Z"); while(d<=end){ cb(d.toISOString().slice(0,10)); d.setUTCDate(d.getUTCDate()+1); } }
+// 여행 만료 판정: 복귀일(없으면 출발일)이 오늘보다 이전이면 '지난 여행' → 추적 중단.
+// (복귀일 당일까지는 활성, 다음 날 0시 KST부터 지난 여행. 크롤러도 이 규칙으로 타겟을 고름)
+function isPastTrip(t){ const d=t.in||t.out; return !!(d && d<todayStr()); }
+function activeTrips(){ return state.trips.filter(t=>!isPastTrip(t)); }
+function pastTrips(){ return state.trips.filter(isPastTrip); }
 function refreshTgt(){
   TGT=new Set(); TGTRANGE={}; TGT_OUT=new Set(); TGT_IN=new Set();
-  state.trips.forEach(t=>{
+  activeTrips().forEach(t=>{
     if(t.out){ TGT.add(t.city+"|O|"+t.out); TGT_OUT.add(t.city+"|"+t.out); }
     if(t.in){ TGT.add(t.city+"|I|"+t.in); TGT_IN.add(t.city+"|"+t.in); }
     const set=TGTRANGE[t.city]||(TGTRANGE[t.city]=new Set());
@@ -574,22 +583,36 @@ function renderTargetCal(){
 }
 
 // ② 내 여행 목록
+function tripSort(a,b){ return (a.out||a.in||"").localeCompare(b.out||b.in||"")||a.city.localeCompare(b.city); }
+function legPill(city,dir,date){
+  const biz=bizDatesFor(city,dir).has(date), upg=upgDatesFor(city,dir).has(date);
+  return biz?`<span class="pill yes">좌석○</span>`:(upg?`<span class="pill upgp">U 가능</span>`:`<span class="pill no">아직</span>`);
+}
+function tripCard(t,dim){
+  const legs=[];
+  if(t.out) legs.push(`<span class="leg"><span class="lgdir" style="color:var(--out)">🛫 ${fmtDate(t.out)}</span>${dim?"":legPill(t.city,"O",t.out)}</span>`);
+  if(t.in) legs.push(`<span class="leg"><span class="lgdir" style="color:var(--in)">🛬 ${fmtDate(t.in)}</span>${dim?"":legPill(t.city,"I",t.in)}</span>`);
+  const both=!dim&&t.out&&t.in&&bizDatesFor(t.city,"O").has(t.out)&&bizDatesFor(t.city,"I").has(t.in);
+  return `<div class="tcard${dim?" donetrip":""}"><div class="tinfo"><div class="tdate">${t.city}</div><div class="legs">${legs.join("")}</div></div>`+
+    (both?`<span class="pill both">둘다 가능 🎯</span>`:"")+
+    `<button class="del" data-id="${t.id}" aria-label="삭제">×</button></div>`;
+}
 function renderTargets(){
   refreshTgt();
-  $("#tgtCount").textContent=state.trips.length;
+  const act=activeTrips(), past=pastTrips();
+  $("#tgtCount").textContent=act.length;
   const box=$("#tgtList");
-  if(!state.trips.length){ box.innerHTML='<div class="emptyt">아직 여행이 없습니다. 목적지를 고르고 달력에서 출국일·입국일을 눌러 "여행 추가"를 누르세요.</div>'; renderSaveState(); return; }
-  const trips=[...state.trips].sort((a,b)=>((a.out||a.in||"")).localeCompare(b.out||b.in||"")||a.city.localeCompare(b.city));
-  box.innerHTML=trips.map(t=>{
-    const legs=[];
-    if(t.out){ const has=seatDatesFor(t.city,"O").has(t.out); legs.push(`<span class="leg"><span class="lgdir" style="color:var(--out)">🛫 ${fmtDate(t.out)}</span><span class="pill ${has?'yes':'no'}">${has?'좌석○':'아직'}</span></span>`); }
-    if(t.in){ const has=seatDatesFor(t.city,"I").has(t.in); legs.push(`<span class="leg"><span class="lgdir" style="color:var(--in)">🛬 ${fmtDate(t.in)}</span><span class="pill ${has?'yes':'no'}">${has?'좌석○':'아직'}</span></span>`); }
-    const both=t.out&&t.in&&seatDatesFor(t.city,"O").has(t.out)&&seatDatesFor(t.city,"I").has(t.in);
-    return `<div class="tcard"><div class="tinfo"><div class="tdate">${t.city}</div><div class="legs">${legs.join("")}</div></div>`+
-      (both?`<span class="pill both">둘다 가능 🎯</span>`:"")+
-      `<button class="del" data-id="${t.id}" aria-label="삭제">×</button></div>`;
-  }).join("");
+  if(!act.length && !past.length){ box.innerHTML='<div class="emptyt">아직 여행이 없습니다. 목적지를 고르고 달력에서 출국일·입국일을 눌러 "여행 추가"를 누르세요.</div>'; renderSaveState(); return; }
+  let html = act.length ? [...act].sort(tripSort).map(t=>tripCard(t,false)).join("")
+                        : '<div class="emptyt">추적 중인 여행이 없습니다. 목적지를 고르고 날짜를 추가하면 그 노선만 자동 추적됩니다.</div>';
+  if(past.length){
+    html += `<button class="pasttoggle" id="pastToggle" aria-expanded="false">지난 여행 ${past.length}건 · 추적 종료 ▾</button>`+
+            `<div id="pastList" class="pastwrap" hidden>`+[...past].sort(tripSort).reverse().map(t=>tripCard(t,true)).join("")+`</div>`;
+  }
+  box.innerHTML=html;
   box.querySelectorAll(".del").forEach(b=>b.onclick=()=>removeTrip(b.dataset.id));
+  const pt=$("#pastToggle");
+  if(pt) pt.onclick=()=>{ const l=$("#pastList"); l.hidden=!l.hidden; pt.setAttribute("aria-expanded",String(!l.hidden)); pt.textContent=`지난 여행 ${past.length}건 · 추적 종료 ${l.hidden?"▾":"▴"}`; };
   renderSaveState();
 }
 

@@ -84,7 +84,9 @@
   .mc.seat{background:var(--ok);color:#fff;font-weight:800}
   .mc.seat.out{background:var(--out)} .mc.seat.in{background:var(--in)}
   .mc.upg{background:var(--upg-soft);color:var(--upg);font-weight:800;box-shadow:inset 0 0 0 1.5px var(--upg)}
-  .mc.day.tripend{background:var(--trip);color:#fff;font-weight:800;border-radius:7px}
+  .mc.day.tripend{background:var(--trip);color:#fff;font-weight:800;border-radius:50%;z-index:2}
+  .mc.tripend .tarw{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);font-size:7.5px;line-height:1;font-weight:900;letter-spacing:-.5px;text-shadow:0 0 2px var(--surface),0 0 2px var(--surface),0 0 2px var(--surface)}
+  .mc.tripend.tstart .tarw{color:var(--out)} .mc.tripend.tret .tarw{color:var(--in)}
   .mc.new::before{content:"";position:absolute;top:0;right:0;width:0;height:0;border-top:8px solid var(--newflag);border-left:8px solid transparent}
   .mc.upg::after,.mc.seat.bizupg::after{content:"U";position:absolute;right:1.5px;bottom:0;font-size:7.5px;line-height:1.1;font-weight:900;letter-spacing:0}
   .mc.upg::after{color:var(--upg)} .mc.seat.bizupg::after{color:#fff}
@@ -424,9 +426,10 @@ function renderYear(city,dir){
       let cls="mc day";
       if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
       if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
-      if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
+      if(tend)cls+=" tripend "+(dir==="O"?"tstart":"tret"); else if(tgt&&!hasSeat)cls+=" band";
       if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
-      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
+      const arw=tend?`<span class="tarw">${dir==="O"?"▶":"◀"}</span>`:"";
+      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}${arw}</div>`;
     }
     total+=cnt;
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
@@ -455,9 +458,10 @@ function renderYearMonths(city,dir,months){
       let cls="mc day";
       if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
       if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
-      if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
+      if(tend)cls+=" tripend "+(dir==="O"?"tstart":"tret"); else if(tgt&&!hasSeat)cls+=" band";
       if(past)cls+=" past";
-      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
+      const arw=tend?`<span class="tarw">${dir==="O"?"▶":"◀"}</span>`:"";
+      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}${arw}</div>`;
     }
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
       `<div class="mg">`+DOW.map((d,i)=>`<div class="dh${i===0?' sun':''}">${d}</div>`).join("")+cells+`</div></div>`;

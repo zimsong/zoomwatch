@@ -92,11 +92,17 @@
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chips button{font:inherit;font-size:13px;font-weight:600;padding:6px 13px;border:1px solid var(--line);border-radius:20px;background:var(--surface);color:var(--muted);cursor:pointer}
   .chips button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-  .contgroup{margin-bottom:6px}
-  .conth{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-  .conth .ccount{background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:800;padding:1px 8px;border-radius:20px}
-  .citysec{margin-bottom:12px}
-  .cityname{font-size:15px;font-weight:800;margin:0 0 8px}
+  .contgroup{margin-bottom:10px}
+  /* 대륙 랜드마크 배너 */
+  .cbanner{position:relative;height:132px;border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(20,30,45,.16);margin:28px 0 18px}
+  .cbanner svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .cboverlay{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:14px 18px;background:linear-gradient(0deg,rgba(0,0,0,.30),rgba(0,0,0,0) 58%)}
+  .cbtitle{color:#fff;font-weight:800;font-size:23px;letter-spacing:-.01em;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+  .cbsub{color:rgba(255,255,255,.82);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-top:5px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .cbcount{background:rgba(255,255,255,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:12px;font-weight:800;padding:4px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.35);white-space:nowrap}
+  @media(max-width:480px){.cbanner{height:108px}.cbtitle{font-size:19px}}
+  .citysec{margin-bottom:14px}
+  .cityname{font-size:15.5px;font-weight:800;margin:0 0 9px;padding-left:9px;border-left:3px solid var(--accent);line-height:1.2}
   .nocal{font-size:12px;color:var(--muted);padding:6px 2px}
 
   /* 타겟 설정 */
@@ -458,12 +464,67 @@ function renderCitySection(city){
     `<div class="half in"><div class="halfhead"><span class="dirtag in">🛬 오는편 ${city}→ICN</span><span class="halfcnt">${ic?`가능일 <b>${ic}일</b>`:'없음'}</span></div><div class="year" data-city="${city}" data-dir="I">${iY}</div></div>`+
     `</div></div>`;
 }
+// 대륙 랜드마크 배너 (직접 그린 SVG 벡터)
+const CONT_META={
+  "북미":{key:"na",sub:"North America",grad:["#17407f","#3f86c4"]},
+  "일본":{key:"jp",sub:"Japan",grad:["#5b3a7e","#f0a9ab"]},
+  "아시아":{key:"as",sub:"Asia",grad:["#0e4f6b","#e7b55a"]},
+  "유럽":{key:"eu",sub:"Europe",grad:["#243b6b","#e08a4e"]},
+  "오세아니아":{key:"oc",sub:"Oceania",grad:["#0d4d73","#48b1c9"]}
+};
+function _plane(x,y,r,o){ o=o||.8; return `<path transform="translate(${x},${y}) rotate(${r||0})" d="M-16,2 L8,-2 L12,-9 L17,-9 L14,-2 L24,-3 L24,1 L13,3 L9,12 L4,12 L7,2 Z" fill="rgba(255,255,255,${o})"/>`; }
+function bannerSVG(ct){
+  const m=CONT_META[ct]; if(!m) return "";
+  const id="sky-"+m.key;
+  const sky=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.grad[0]}"/><stop offset="1" stop-color="${m.grad[1]}"/></linearGradient></defs><rect width="1200" height="240" fill="url(#${id})"/>`;
+  let art="";
+  if(m.key==="na"){
+    art=`<circle cx="980" cy="66" r="42" fill="#ffe4b0" opacity=".92"/>${_plane(150,58,-6)}
+      <path d="M0,240 L0,150 L130,118 L250,172 L380,108 L500,168 L620,120 L620,240Z" fill="#2f6ba6" opacity=".5"/>
+      <path d="M0,240 L0,188 L160,116 L300,196 L440,126 L580,200 L580,240Z" fill="#12314f"/>
+      <path d="M160,116 L136,150 L186,150Z" fill="#fff"/><path d="M440,126 L418,158 L464,158Z" fill="#fff"/>
+      <path d="M636,240 L636,186 L676,150 L716,186 L756,150 L796,186 L836,150 L876,186 L876,240Z" fill="#d6e6f6"/>
+      <g fill="#0e2742"><rect x="912" y="150" width="34" height="90"/><rect x="956" y="116" width="42" height="124"/><rect x="1008" y="158" width="30" height="82"/><rect x="1048" y="96" width="46" height="144"/><rect x="1104" y="140" width="34" height="100"/><rect x="1148" y="168" width="40" height="72"/></g>`;
+  } else if(m.key==="jp"){
+    art=`<circle cx="600" cy="92" r="54" fill="#ffd9c0" opacity=".95"/>${_plane(1010,56,-6)}
+      <path d="M330,240 L560,74 L790,240Z" fill="#3a2b57"/>
+      <path d="M560,74 L506,116 L536,128 L560,108 L584,128 L614,116Z" fill="#fdeef0"/>
+      <g fill="#7a1f2b"><rect x="150" y="150" width="15" height="90"/><rect x="243" y="150" width="15" height="90"/><rect x="126" y="136" width="156" height="13"/><rect x="138" y="158" width="132" height="9"/><rect x="176" y="120" width="56" height="9"/></g>
+      <g fill="#2a1d40"><rect x="912" y="202" width="66" height="38"/><path d="M900,202 L990,202 L976,182 L914,182Z"/><rect x="924" y="160" width="42" height="22"/><path d="M910,160 L980,160 L968,142 L922,142Z"/><rect x="933" y="124" width="24" height="18"/><path d="M920,124 L970,124 L959,108 L931,108Z"/><rect x="942" y="94" width="6" height="16"/></g>`;
+  } else if(m.key==="as"){
+    art=`<circle cx="210" cy="70" r="40" fill="#ffe9b0" opacity=".9"/>${_plane(980,54,-6)}
+      <g stroke="#123039" stroke-width="7" fill="none" stroke-linecap="round"><path d="M120,240 C118,190 112,166 120,142"/><path d="M700,240 C704,196 712,172 706,148"/></g>
+      <g fill="#123039"><path d="M120,142 C92,122 70,126 58,136 C84,132 102,136 120,148Z"/><path d="M120,142 C150,124 174,128 186,140 C158,134 138,138 120,148Z"/><path d="M120,140 C112,114 120,98 132,88 C122,106 120,124 123,144Z"/><path d="M706,148 C680,128 658,132 646,142 C672,138 690,142 706,154Z"/><path d="M706,148 C734,130 756,134 768,146 C742,140 722,144 706,154Z"/><path d="M706,146 C700,120 708,104 720,94 C708,112 706,130 709,150Z"/></g>
+      <path d="M300,240 L300,172 L322,72 L344,172 L344,240Z" fill="#123039"/><path d="M322,72 L312,104 L332,104Z" fill="#e7c67a"/><rect x="286" y="196" width="72" height="44" fill="#123039"/>
+      <g fill="#0e2731"><rect x="840" y="134" width="38" height="106"/><rect x="886" y="104" width="44" height="136"/><rect x="938" y="150" width="32" height="90"/></g>
+      <path d="M840,100 L978,96 L978,108 L840,112Z" fill="#1c4150"/>`;
+  } else if(m.key==="eu"){
+    art=`<circle cx="1000" cy="70" r="42" fill="#ffdca0" opacity=".9"/>${_plane(170,56,-6)}
+      <g fill="#2a2340"><path d="M560,240 L584,96 L608,240 L596,240 L584,150 L572,240Z"/><path d="M572,150 L596,150 L600,168 L568,168Z"/><rect x="580" y="78" width="8" height="24"/></g>
+      <path d="M568,168 L600,168 L584,110Z" fill="#2a2340" opacity=".35"/>
+      <g fill="#3a2f57"><path d="M740,240 L740,176 C740,146 812,146 812,176 L812,240Z"/><ellipse cx="776" cy="146" rx="26" ry="24"/><rect x="772" y="104" width="8" height="18"/></g>
+      <g fill="#241d38"><rect x="300" y="120" width="42" height="120"/><path d="M296,120 L346,120 L321,90Z"/><circle cx="321" cy="140" r="10" fill="#e8c56a"/></g>
+      <rect x="900" y="172" width="252" height="68" fill="#2a2340"/>
+      <g fill="${m.grad[1]}" opacity=".45"><rect x="912" y="186" width="16" height="42" rx="8"/><rect x="942" y="186" width="16" height="42" rx="8"/><rect x="972" y="186" width="16" height="42" rx="8"/><rect x="1002" y="186" width="16" height="42" rx="8"/><rect x="1032" y="186" width="16" height="42" rx="8"/><rect x="1062" y="186" width="16" height="42" rx="8"/><rect x="1092" y="186" width="16" height="42" rx="8"/><rect x="1122" y="186" width="16" height="42" rx="8"/></g>`;
+  } else {
+    art=`<circle cx="200" cy="72" r="40" fill="#ffe6a8" opacity=".9"/>${_plane(1000,56,-6)}
+      <path d="M250,240 L250,172 C520,74 820,74 1090,172 L1090,240Z" fill="none" stroke="#0e3b52" stroke-width="12"/>
+      <path d="M250,172 L1090,172" stroke="#0e3b52" stroke-width="8"/>
+      <g stroke="#0e3b52" stroke-width="4"><path d="M400,152 L400,172"/><path d="M520,122 L520,172"/><path d="M670,110 L670,172"/><path d="M820,122 L820,172"/><path d="M940,152 L940,172"/></g>
+      <g fill="#10425c"><path d="M520,240 C520,190 560,176 580,202 C584,172 626,166 636,202 C644,176 684,180 690,212 L690,240Z"/><path d="M700,240 C700,200 736,188 752,212 C760,186 796,190 800,220 L800,240Z"/></g>
+      <rect x="518" y="232" width="304" height="10" fill="#0a3146"/>`;
+  }
+  return `<svg viewBox="0 0 1200 240" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${sky}${art}</svg>`;
+}
+function contBanner(ct,n){
+  return `<div class="cbanner">${bannerSVG(ct)}<div class="cboverlay"><div><div class="cbtitle">${ct}</div><div class="cbsub">${CONT_META[ct].sub}</div></div><span class="cbcount">${n}개 도시</span></div></div>`;
+}
 function renderOverview(){
   const cont=state.calCont, order=["북미","일본","아시아","유럽","오세아니아"], groups={};
   DB.cities.forEach(c=>{ if(cont!=="all"&&c.cont!==cont)return; (groups[c.cont]=groups[c.cont]||[]).push(c.city); });
   let html="";
   for(const ct of order){ if(!groups[ct])continue;
-    html+=`<div class="contgroup"><h2 class="conth">${ct} <span class="ccount">${groups[ct].length}</span></h2>`+groups[ct].map(renderCitySection).join("")+`</div>`;
+    html+=`<div class="contgroup">`+contBanner(ct,groups[ct].length)+groups[ct].map(renderCitySection).join("")+`</div>`;
   }
   $("#overview").innerHTML=html||'<div class="emptyt">데이터가 없습니다.</div>';
 }

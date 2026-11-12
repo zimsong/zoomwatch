@@ -5,19 +5,19 @@
   :root{
     --bg:#f3f5f8; --surface:#ffffff; --line:#e2e7ee; --fg:#182029; --muted:#5c6673;
     --accent:#1d6fd6; --accent-soft:#e7f0fb; --out:#1d6fd6; --in:#7a4ad6; --in-soft:#efe7fb; --out-soft:#e7f0fb;
-    --ok:#127a4a; --ok-soft:#e2f3ea; --new:#c2410c; --new-soft:#fdeadd; --wknd:#b23b5e; --tgt:#b8860b; --tgt-soft:#faf0d2; --tgtdot:#e11d48; --newflag:#f59e0b;
+    --ok:#127a4a; --ok-soft:#e2f3ea; --new:#c2410c; --new-soft:#fdeadd; --wknd:#b23b5e; --tgt:#b8860b; --tgt-soft:#faf0d2; --tgtdot:#e11d48; --newflag:#f59e0b; --trip:#16366b; --trip-soft:#dbe6fb;
     --shadow:0 1px 2px rgba(20,30,45,.06),0 2px 8px rgba(20,30,45,.05);
     --f-body:"Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
     --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
     --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
-    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; color-scheme:dark;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; color-scheme:dark;
   }}
   :root[data-theme="dark"]{
     --bg:#11161c; --surface:#1a222c; --line:#2a3542; --fg:#e7edf4; --muted:#93a0b0;
     --accent:#5ea2ef; --accent-soft:#17293d; --out:#5ea2ef; --in:#a98cf0; --in-soft:#271b3a; --out-soft:#17293d;
-    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; color-scheme:dark;
+    --ok:#4cc585; --ok-soft:#133026; --new:#f0915e; --new-soft:#39241a; --wknd:#e58aa4; --tgt:#e5b94e; --tgt-soft:#352b12; --tgtdot:#fb7185; --newflag:#fbbf24; --trip:#4a7fd6; --trip-soft:#20314b; color-scheme:dark;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -52,7 +52,7 @@
   .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:14px}
   .legend span{display:inline-flex;align-items:center;gap:5px}
   .lg{width:12px;height:12px;border-radius:4px;display:inline-block}
-  .lg.seat{background:var(--ok)} .lg.out{background:var(--out)} .lg.in{background:var(--in)} .lg.tgt{background:var(--tgtdot)} .lg.new{background:var(--newflag)} .lg.beyond{background:var(--line)}
+  .lg.seat{background:var(--ok)} .lg.out{background:var(--out)} .lg.in{background:var(--in)} .lg.tgt{background:var(--trip)} .lg.new{background:var(--newflag)} .lg.beyond{background:var(--line)} .lg.holiday{background:var(--wknd)}
   .openinfo{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.5}.openinfo b{color:var(--fg)}
 
   /* 분할 화면: 가는편(위) / 오는편(아래) */
@@ -75,16 +75,17 @@
   .mc.blank{visibility:hidden}
   .mc.day{cursor:pointer}
   .mc.past{opacity:.28;cursor:default}
-  .mc.beyond{opacity:.32;cursor:default;color:var(--muted)}
+  .mc.beyond{opacity:.45;color:var(--muted)}
+  .mc.beyond.band,.mc.beyond.tripend{opacity:1}
   .mc.sun{color:var(--wknd)}
+  .mc.holiday{color:var(--wknd);font-weight:700}
+  .mc.holiday::after{content:"";position:absolute;top:1px;left:1px;width:4px;height:4px;border-radius:50%;background:var(--wknd)}
+  .mc.band{background:var(--trip-soft);font-weight:700}
   .mc.seat{background:var(--ok);color:#fff;font-weight:800}
   .mc.seat.out{background:var(--out)} .mc.seat.in{background:var(--in)}
-  .mc.tgt{font-weight:800}
-  .mc.tgt::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:2px;background:var(--tgtdot)}
-  .mc.tgt-end::after{height:3px;left:2px;right:2px;border-radius:2px}
-  .mc.seat.tgt::after{box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+  .mc.day.tripend{background:var(--trip);color:#fff;font-weight:800;border-radius:7px}
   .mc.new::before{content:"";position:absolute;top:0;right:0;width:0;height:0;border-top:8px solid var(--newflag);border-left:8px solid transparent}
-  .mc.draft{outline:2px solid var(--accent);outline-offset:-2px;font-weight:800}
+  .mc.draft{outline:2px solid var(--accent);outline-offset:-2px;font-weight:800;border-radius:7px}
   .hint{font-size:12px;color:var(--muted);margin:14px 0 4px}
 
   /* 전 도시 개요 */
@@ -184,6 +185,7 @@
       <span><i class="lg tgt"></i>내 여행 날짜</span>
       <span><i class="lg new"></i>새로 뜬 좌석</span>
       <span><i class="lg beyond"></i>아직 오픈 전</span>
+      <span><i class="lg holiday"></i>공휴일</span>
     </div>
     <p class="openinfo"></p>
     <div id="overview"></div>
@@ -214,6 +216,7 @@
       <span><i class="lg tgt"></i>내 여행 날짜</span>
       <span><i class="lg new"></i>새로 뜬 좌석</span>
       <span><i class="lg beyond"></i>아직 오픈 전</span>
+      <span><i class="lg holiday"></i>공휴일</span>
     </div>
     <p class="openinfo"></p>
     <div class="split">
@@ -260,6 +263,18 @@
 
 <script>
 const DOW=["일","월","화","수","목","금","토"];
+// 대한민국 공휴일(관공서 공휴일 + 대체공휴일). 캘린더 범위(2026-11~2028-01)에 맞춰 수록. 연장 시 추가.
+const HOLIDAYS={
+  "2026-12-25":"성탄절",
+  "2027-01-01":"신정",
+  "2027-02-06":"설날 연휴","2027-02-07":"설날","2027-02-08":"설날 연휴","2027-02-09":"대체공휴일(설날)",
+  "2027-03-01":"삼일절","2027-05-05":"어린이날","2027-05-13":"부처님오신날","2027-06-06":"현충일",
+  "2027-08-15":"광복절","2027-08-16":"대체공휴일(광복절)",
+  "2027-09-14":"추석 연휴","2027-09-15":"추석","2027-09-16":"추석 연휴",
+  "2027-10-03":"개천절","2027-10-04":"대체공휴일(개천절)","2027-10-09":"한글날","2027-10-11":"대체공휴일(한글날)",
+  "2027-12-25":"성탄절","2027-12-27":"대체공휴일(성탄절)",
+  "2028-01-01":"신정","2028-01-26":"설날 연휴","2028-01-27":"설날","2028-01-28":"설날 연휴"
+};
 const HORIZON_DAYS=360; // 가장 먼 오픈 출발일 = 오늘+이 값. 관측값(2026-11-06 기준 2027-11-01)에 맞춰 360. 틀리면 이 숫자만 조정.
 // 사이트 상위 메뉴. 활성 항목이 상단 타이틀 역할. 큰 사이트로 확장할 때 여기에 메뉴만 추가하면 옆에 붙음.
 const MENUS=[
@@ -320,7 +335,7 @@ function boot(){
   $("#loading").hidden=true; $("#foot").hidden=false;
   $("#mainnav").innerHTML=MENUS.map(m=>`<a class="navitem${m.active?' active':''}"${m.href?` href="${m.href}"`:''}>${m.label}</a>`).join("");
   $("#upd").innerHTML="업데이트: <b>"+fmtUpd(DB.updated)+"</b>";
-  document.querySelectorAll(".openinfo").forEach(el=>el.innerHTML=`현재 예약 가능한 가장 먼 출발일은 <b>${horizonStr()}</b>입니다. 그 이후 날짜는 아직 오픈 전이라 회색으로 표시됩니다.`);
+  document.querySelectorAll(".openinfo").forEach(el=>el.innerHTML=`현재 예약 가능한 가장 먼 출발일은 <b>${horizonStr()}</b>입니다. 그 이후(회색)는 아직 오픈 전이지만, <b>미리 여행 날짜로 지정</b>해둘 수 있어요.`);
   const opts=cityOptions(); $("#tCity").innerHTML=opts;
   if(!cityList().includes(state.tCity)) state.tCity=cityList()[0];
   $("#tCity").value=state.tCity;
@@ -329,10 +344,10 @@ function boot(){
   $("#tab-seats").onclick=()=>setTab("seats"); $("#tab-target").onclick=()=>setTab("target");
   $("#contFilter").onclick=e=>{ const b=e.target.closest("button"); if(!b)return; state.calCont=b.dataset.v; [...$("#contFilter").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===state.calCont)); renderOverview(); };
   // 개요에서 좌석 날짜 클릭 → 그 도시·방향을 새 여행 후보로 담고 타겟 탭으로 이동
-  $("#overview").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past):not(.beyond)"); if(!c)return; const y=c.closest(".year"); if(!y)return; state.tCity=y.dataset.city; $("#tCity").value=state.tCity; pickDraft(y.dataset.dir,c.dataset.date); setTab("target"); $("#panel-target").scrollIntoView({behavior:"smooth",block:"start"}); };
+  $("#overview").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; const y=c.closest(".year"); if(!y)return; state.tCity=y.dataset.city; $("#tCity").value=state.tCity; pickDraft(y.dataset.dir,c.dataset.date); setTab("target"); $("#panel-target").scrollIntoView({behavior:"smooth",block:"start"}); };
   $("#tCity").onchange=e=>{ state.tCity=e.target.value; state.draft={out:null,in:null}; renderTargetCal(); };
-  $("#yearTOut").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past):not(.beyond)"); if(!c)return; pickDraft("O",c.dataset.date); };
-  $("#yearTIn").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past):not(.beyond)"); if(!c)return; pickDraft("I",c.dataset.date); };
+  $("#yearTOut").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; pickDraft("O",c.dataset.date); };
+  $("#yearTIn").onclick=e=>{ const c=e.target.closest(".mc.day:not(.past)"); if(!c)return; pickDraft("I",c.dataset.date); };
   $("#tripAdd").onclick=addTrip;
   $("#draftClear").onclick=()=>{ state.draft={out:null,in:null}; renderTargetCal(); $("#tripMsg").textContent=""; };
   $("#copyJson").onclick=copySaveJson;
@@ -389,11 +404,16 @@ function renderYear(city,dir){
     for(let day=1;day<=days;day++){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
-      if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
-      const hasSeat=seatSet.has(date), nw=newSet.has(date), tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), past=date<today;
+      const beyond=date>horizon, past=date<today;
+      const hasSeat=!beyond&&seatSet.has(date), nw=!beyond&&newSet.has(date);
+      const tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), hol=HOLIDAYS[date];
       if(hasSeat&&!past) cnt++;
-      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new"; if(tgt)cls+=" tgt"; if(tend)cls+=" tgt-end"; if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
-      cells+=`<div class="${cls}" data-date="${date}">${day}</div>`;
+      let cls="mc day";
+      if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
+      if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new";
+      if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
+      if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
+      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
     }
     total+=cnt;
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
@@ -414,11 +434,16 @@ function renderYearMonths(city,dir,months){
     for(let day=1;day<=days;day++){
       const date=y+"-"+String(m).padStart(2,"0")+"-"+String(day).padStart(2,"0");
       const dow=new Date(Date.UTC(y,m-1,day)).getUTCDay();
-      if(date>horizon){ cells+=`<div class="mc beyond">${day}</div>`; continue; }
-      const hasSeat=seatSet.has(date), nw=newSet.has(date), tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), past=date<today;
+      const beyond=date>horizon, past=date<today;
+      const hasSeat=!beyond&&seatSet.has(date), nw=!beyond&&newSet.has(date);
+      const tgt=isTarget(city,dir,date), tend=isEndpoint(city,dir,date), hol=HOLIDAYS[date];
       if(hasSeat&&!past) cnt++;
-      let cls="mc day"; if(dow===0)cls+=" sun"; if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new"; if(tgt)cls+=" tgt"; if(tend)cls+=" tgt-end"; if(past)cls+=" past";
-      cells+=`<div class="${cls}" data-date="${date}">${day}</div>`;
+      let cls="mc day";
+      if(dow===0)cls+=" sun"; if(hol)cls+=" holiday"; if(beyond)cls+=" beyond";
+      if(hasSeat)cls+=" seat "+dcls; if(hasSeat&&nw)cls+=" new";
+      if(tend)cls+=" tripend"; else if(tgt&&!hasSeat)cls+=" band";
+      if(past)cls+=" past";
+      cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}</div>`;
     }
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+
       `<div class="mg">`+DOW.map((d,i)=>`<div class="dh${i===0?' sun':''}">${d}</div>`).join("")+cells+`</div></div>`;

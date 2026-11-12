@@ -84,9 +84,10 @@
   .mc.seat{background:var(--ok);color:#fff;font-weight:800}
   .mc.seat.out{background:var(--out)} .mc.seat.in{background:var(--in)}
   .mc.upg{background:var(--upg-soft);color:var(--upg);font-weight:800;box-shadow:inset 0 0 0 1.5px var(--upg)}
-  .mc.day.tripend{background:var(--trip);color:#fff;font-weight:800;border-radius:50%;z-index:2}
-  .mc.tripend .tarw{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);font-size:9.5px;line-height:1;font-weight:900;letter-spacing:-.5px;text-shadow:0 0 2px var(--surface),0 0 2px var(--surface),0 0 2px var(--surface)}
-  .mc.tripend.tstart .tarw{color:var(--out)} .mc.tripend.tret .tarw{color:var(--in)}
+  .mc.day.tripend{background:var(--trip-soft);font-weight:800;border-radius:7px;z-index:2}
+  .mc.tripend.tstart{color:var(--out);box-shadow:inset 0 0 0 1.5px var(--out)}
+  .mc.tripend.tret{color:var(--in);box-shadow:inset 0 0 0 1.5px var(--in)}
+  .mc.tripend .pmk{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:14px;height:14px;filter:drop-shadow(0 0 1.5px var(--surface)) drop-shadow(0 0 1px var(--surface))}
   .mc.new::before{content:"";position:absolute;top:0;right:0;width:0;height:0;border-top:8px solid var(--newflag);border-left:8px solid transparent}
   .mc.upg::after,.mc.seat.bizupg::after{content:"U";position:absolute;right:1.5px;bottom:0;font-size:7.5px;line-height:1.1;font-weight:900;letter-spacing:0}
   .mc.upg::after{color:var(--upg)} .mc.seat.bizupg::after{color:#fff}
@@ -389,6 +390,11 @@ function isTarget(city,dir,date){ return !!(TGTRANGE[city]&&TGTRANGE[city].has(d
 function isEndpoint(city,dir,date){ return TGT.has(city+"|"+dir+"|"+date); }  // (레거시)
 // 방향 무관: 내가 지정한 날짜는 가는/오는 캘린더 양쪽에 동일하게 표기. 가는 날 우선.
 function endpointKind(city,date){ if(TGT_OUT.has(city+"|"+date))return "out"; if(TGT_IN.has(city+"|"+date))return "in"; return null; }
+// 끝점 비행기 마커(벡터): 가는 날=파랑 이륙, 오는 날=보라 착륙. 색상이 들어가 작은 셀에서도 잘 보임.
+function planeMark(kind){
+  const col=kind==="out"?"var(--out)":"var(--in)", rot=kind==="out"?45:135;
+  return `<svg class="pmk" viewBox="0 0 24 24" aria-hidden="true"><path transform="rotate(${rot} 12 12)" fill="${col}" d="M21,16v-2l-8-5V3.5C13,2.67 12.33,2 11.5,2S10,2.67 10,3.5V9l-8,5v2l8-2.5V19l-2,1.5V22l3.5-1 3.5,1v-1.5L13,19v-5.5L21,16z"/></svg>`;
+}
 function pickDraft(dir,date){
   const d=state.draft;
   // 같은 날짜 다시 누르면 해제(토글)
@@ -435,7 +441,7 @@ function renderYear(city,dir){
       if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
       if(tend)cls+=" tripend "+(ek==="out"?"tstart":"tret"); else if(tgt&&!hasSeat)cls+=" band";
       if(date===draftDate)cls+=" draft"; if(past)cls+=" past";
-      const arw=tend?`<span class="tarw">${ek==="out"?"🛫":"🛬"}</span>`:"";
+      const arw=tend?planeMark(ek):"";
       cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}${arw}</div>`;
     }
     total+=cnt;
@@ -467,7 +473,7 @@ function renderYearMonths(city,dir,months){
       if(hasBiz)cls+=" seat "+dcls; else if(hasUpg)cls+=" upg"; if(hasBiz&&hasUpg)cls+=" bizupg"; if(hasSeat&&nw)cls+=" new";
       if(tend)cls+=" tripend "+(ek==="out"?"tstart":"tret"); else if(tgt&&!hasSeat)cls+=" band";
       if(past)cls+=" past";
-      const arw=tend?`<span class="tarw">${ek==="out"?"🛫":"🛬"}</span>`:"";
+      const arw=tend?planeMark(ek):"";
       cells+=`<div class="${cls}" data-date="${date}"${hol?` title="${hol}"`:''}>${day}${arw}</div>`;
     }
     html+=`<div class="mini"><div class="mt"><span>${y}.${String(m).padStart(2,"0")}</span>${cnt?`<span class="cnt">${cnt}일</span>`:''}</div>`+

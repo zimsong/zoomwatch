@@ -2863,3 +2863,11 @@
 {"ts": "2026-11-15T15:19+09:00", "event": "disappear", "cont": "일본", "city": "오카야마", "dir": "I", "date": "2026-11-14", "dep_time": "11:55", "tag": "U"}
 {"ts": "2026-11-15T15:19+09:00", "event": "disappear", "cont": "일본", "city": "오카야마", "dir": "O", "date": "2026-11-14", "dep_time": "09:05", "tag": "B"}
 {"ts": "2026-11-15T15:19+09:00", "event": "disappear", "cont": "일본", "city": "오카야마", "dir": "O", "date": "2026-11-14", "dep_time": "09:05", "tag": "U"}
+{"ts": "2026-11-16T04:04+09:00", "event": "appear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2026-12-19", "dep_time": "14:40", "tag": "B"}
+{"ts": "2026-11-16T04:04+09:00", "event": "appear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2026-12-19", "dep_time": "14:40", "tag": "U"}
+{"ts": "2026-11-16T04:04+09:00", "event": "appear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2027-02-17", "dep_time": "14:40", "tag": "B"}
+{"ts": "2026-11-16T04:04+09:00", "event": "appear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2027-02-17", "dep_time": "14:40", "tag": "U"}
+{"ts": "2026-11-16T04:04+09:00", "event": "disappear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2026-11-16", "dep_time": "09:15", "tag": "B"}
+{"ts": "2026-11-16T04:04+09:00", "event": "disappear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2026-11-16", "dep_time": "09:15", "tag": "U"}
+{"ts": "2026-11-16T04:04+09:00", "event": "disappear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2027-02-12", "dep_time": "14:40", "tag": "B"}
+{"ts": "2026-11-16T04:04+09:00", "event": "disappear", "cont": "일본", "city": "가고시마", "dir": "O", "date": "2027-02-12", "dep_time": "14:40", "tag": "U"}

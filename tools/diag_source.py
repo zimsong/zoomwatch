@@ -55,3 +55,25 @@ except Exception as e:
 finally:
     try: source.close_browser()
     except Exception: pass
+
+# --- 전수 점검: 모든 파일의 실제 rows 수 ---
+try:
+    idx2 = source.load_index()
+    print("=== ALL FILES SCAN ===")
+    anydata = 0
+    for f in idx2.get("files", []):
+        try:
+            doc = source._load(idx2.get("_base"), f.get("url") or f.get("file"))
+            r = doc.get("rows")
+            n = len(r) if isinstance(r, list) else (r if isinstance(r,int) else "?")
+            parts = len(f.get("parts", []) or [])
+            if isinstance(n, int) and n: anydata += 1
+            print(f"{f.get('airline')}/{f.get('type')}/{f.get('continent')} idxrows={f.get('rows')} loadedrows={n} parts={parts} stale={f.get('stale')}")
+        except Exception as e:
+            print("  LOAD_ERR", f.get("file"), type(e).__name__, str(e)[:120])
+    print("FILES_WITH_DATA:", anydata)
+except Exception as e:
+    print("SCAN_ERROR:", type(e).__name__, e)
+finally:
+    try: source.close_browser()
+    except Exception: pass

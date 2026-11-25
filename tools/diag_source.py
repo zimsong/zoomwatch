@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """일회성 진단: zoommytrip 현재 데이터 구조를 로그로 덤프한다."""
 import os, json, traceback
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from collections import Counter
 os.environ.setdefault("ZOOMWATCH_FETCH", "browser")
 from zoomwatch import source
